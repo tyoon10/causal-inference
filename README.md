@@ -1,8 +1,8 @@
 # Causal Inference Study Guide
 
-Interactive single-page study module covering causal inference fundamentals, built for mid-term exam preparation at Columbia Business School.
+Interactive study module covering causal inference fundamentals, built for mid-term exam preparation at Columbia Business School.
 
-## [Open the Study Guide](https://tyoon10.github.io/causal-inference/)
+## [Open the Study Guide](https://tyoon10.github.io/causal-inference/) · [View the Chat Session](https://tyoon10.github.io/causal-inference/chat.html)
 
 ## What's Inside
 
