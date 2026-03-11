@@ -555,6 +555,14 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
         <strong>Conditioning on Z:</strong> $X \perp Y \mid Z$ (path is BLOCKED).<br>
         <p style="margin-top:8px"><em>Light switch analogy:</em> If you know the current is flowing ($Z$), knowing the switch position ($X$) tells you nothing new about the light ($Y$).</p>
         <p><strong>Caution:</strong> If $Z$ is a mediator of the causal effect of $X$ on $Y$, conditioning on $Z$ will make $X$ appear to have no effect &mdash; even though it does!</p>
+
+        <h4 style="color:var(--accent);margin:14px 0 6px;">Numerical Example: Smoking → Tar → Cancer</h4>
+        <p style="font-size:0.88rem;">$X$ = smoking, $Z$ = tar deposits, $Y$ = lung cancer.</p>
+        <table class="comparison-table" style="margin:8px 0;font-size:0.84rem;">
+          <tr><th></th><th>cor(X, Y)</th><th>cor(X, Y | Z)</th></tr>
+          <tr><td>Full population</td><td><strong>0.40</strong> (X and Y correlated)</td><td><strong>0.01</strong> (independent given Z)</td></tr>
+        </table>
+        <p style="font-size:0.85rem;color:var(--text-dim);">Smoking affects cancer only <em>through</em> tar. Fixing tar, smoking tells you nothing new about cancer. But this also means: conditioning on a mediator kills the causal signal!</p>
       </div>
     </div>
     <div class="concept-card" onclick="toggleCard(this)">
@@ -562,7 +570,17 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
       <div class="concept-body">
         <strong>Unconditional:</strong> $X \not\perp Y$ (spurious correlation via common cause).<br>
         <strong>Conditioning on Z:</strong> $X \perp Y \mid Z$ (path is BLOCKED).<br>
-        <p style="margin-top:8px"><em>Lemonade & crime:</em> Temperature ($Z$) causes both lemonade sales ($X$) and crime ($Y$). They're correlated but neither causes the other. Conditioning on temperature removes the spurious correlation.</p>
+        <p style="margin-top:8px"><em>Lemonade & crime:</em> Temperature ($Z$) causes both lemonade sales ($X$) and crime ($Y$). They're correlated but neither causes the other.</p>
+
+        <h4 style="color:var(--accent);margin:14px 0 6px;">Numerical Example: Loyalty → Discount & Purchases</h4>
+        <p style="font-size:0.88rem;">$Z$ = loyalty tier, $X$ = received discount, $Y$ = purchase rate. From the BDA example:</p>
+        <table class="comparison-table" style="margin:8px 0;font-size:0.84rem;">
+          <tr><th>Population</th><th>P(Discount)</th><th>Purchase Rate</th><th>Naive cor(X, Y)</th></tr>
+          <tr><td>All customers</td><td>50%</td><td>—</td><td><strong>0.44</strong> (inflated!)</td></tr>
+          <tr><td>Low loyalty only</td><td>20%</td><td>0.20 / 0.40</td><td><strong>0.20</strong> (true effect)</td></tr>
+          <tr><td>High loyalty only</td><td>80%</td><td>0.60 / 0.80</td><td><strong>0.20</strong> (true effect)</td></tr>
+        </table>
+        <p style="font-size:0.85rem;color:var(--text-dim);">Conditioning on loyalty (Z) removes the confounding. Within each stratum, the true causal effect of 0.20 emerges.</p>
       </div>
     </div>
     <div class="concept-card" onclick="toggleCard(this)">
@@ -570,7 +588,16 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
       <div class="concept-body">
         <strong>Unconditional:</strong> $X \perp Y$ (path is BLOCKED at collider).<br>
         <strong>Conditioning on Z:</strong> $X \not\perp Y \mid Z$ (path is OPENED!).<br>
-        <p style="margin-top:8px"><em>University admission:</em> Math ($X$) and writing ($Y$) skills are independent. But among admitted students ($Z=1$), they become negatively correlated &mdash; if someone was admitted despite bad math, they must be good at writing.</p>
+        <p style="margin-top:8px"><em>University admission:</em> Math ($X$) and writing ($Y$) skills are independent. But among admitted students ($Z=1$), they become negatively correlated.</p>
+
+        <h4 style="color:var(--accent);margin:14px 0 6px;">Numerical Example: Math & Writing → Admission</h4>
+        <p style="font-size:0.88rem;">$X$ = math score, $Y$ = writing score, $Z$ = admitted (Z=1 if $X + Y > $ threshold).</p>
+        <table class="comparison-table" style="margin:8px 0;font-size:0.84rem;">
+          <tr><th>Population</th><th>cor(Math, Writing)</th><th>N</th></tr>
+          <tr><td>All applicants</td><td><strong>0.012</strong> (independent)</td><td>10,000</td></tr>
+          <tr><td>Admitted only (Z=1)</td><td><strong>-0.290</strong> (negative!)</td><td>2,400</td></tr>
+        </table>
+        <p style="font-size:0.85rem;color:var(--text-dim);">Among admitted students, low math implies high writing. Conditioning on the collider created a spurious negative association that doesn't exist in the full population.</p>
         <p><strong>Key rule:</strong> Conditioning on a collider (or its descendants) OPENS a previously blocked path.</p>
       </div>
     </div>
@@ -591,7 +618,7 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
         <span>Condition on Z</span>
       </label>
     </div>
-    <canvas id="bbCanvas" width="680" height="300" style="width:100%;max-width:680px;display:block;margin:0 auto;border-radius:8px;"></canvas>
+    <canvas id="bbCanvas" width="680" height="320" style="width:100%;max-width:680px;display:block;margin:0 auto;border-radius:8px;"></canvas>
     <div id="bbNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
   </div>
 
@@ -2000,7 +2027,7 @@ document.addEventListener('keydown', (e) => {
 
 // ===== Three Building Blocks Interactive =====
 (function() {
-  const BW = 680, BH = 300;
+  const BW = 680, BH = 320;
   const canvas = document.getElementById('bbCanvas');
   if (!canvas) return;
   const narr = document.getElementById('bbNarration');
@@ -2027,8 +2054,8 @@ document.addEventListener('keydown', (e) => {
     ctx.fillStyle = '#12141f'; ctx.fillRect(0, 0, BW, BH);
 
     var cond = document.getElementById('bbCondition').checked;
-    var cx = BW / 2, cy = BH / 2 - 10;
-    var spacing = 180;
+    var cx = BW / 2 - 80, cy = BH / 2 - 10;
+    var spacing = 140;
     var xPos = { X: cx - spacing, Z: cx, Y: cx + spacing };
     var yPos = cy;
     var nodeR = 32;
@@ -2146,16 +2173,89 @@ document.addEventListener('keydown', (e) => {
     var structLabel = mode === 'chain' ? 'Chain: X → Z → Y' : mode === 'fork' ? 'Fork: X ← Z → Y' : 'Collider: X → Z ← Y';
     ctx.fillText(structLabel, cx, BH - 20);
 
+    // Draw example data panel on right side
+    var panelX = xPos.Y + 70, panelY = 30, panelW = 210, panelH = 240;
+    if (panelX + panelW < BW) {
+      ctx.fillStyle = 'rgba(255,255,255,0.03)';
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 1;
+      ctx.fillRect(panelX, panelY, panelW, panelH);
+      ctx.strokeRect(panelX, panelY, panelW, panelH);
+
+      ctx.fillStyle = 'rgba(108,99,255,0.8)'; ctx.font = 'bold 11px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('Example Data', panelX + 10, panelY + 18);
+
+      ctx.font = '11px Inter, system-ui, sans-serif'; ctx.fillStyle = '#e4e4e7';
+      var ly = panelY + 36;
+      var lh = 16;
+
+      if (mode === 'chain') {
+        ctx.fillText('X = Smoking', panelX + 10, ly); ly += lh;
+        ctx.fillText('Z = Tar deposits', panelX + 10, ly); ly += lh;
+        ctx.fillText('Y = Lung cancer', panelX + 10, ly); ly += lh + 8;
+        ctx.fillStyle = 'rgba(108,99,255,0.7)'; ctx.font = 'bold 11px Inter, system-ui, sans-serif';
+        ctx.fillText(cond ? 'Conditioned on Z:' : 'Unconditional:', panelX + 10, ly); ly += lh + 2;
+        ctx.fillStyle = '#e4e4e7'; ctx.font = '11px Inter, system-ui, sans-serif';
+        if (!cond) {
+          ctx.fillText('cor(Smoking, Cancer) = 0.40', panelX + 10, ly); ly += lh;
+          ctx.fillStyle = 'rgba(108,99,255,0.6)';
+          ctx.fillText('→ Correlated through tar', panelX + 10, ly);
+        } else {
+          ctx.fillText('cor(Smoking, Cancer | Tar) = 0.01', panelX + 10, ly); ly += lh;
+          ctx.fillStyle = 'rgba(239,68,68,0.7)';
+          ctx.fillText('→ Independent! Tar absorbs', panelX + 10, ly); ly += lh;
+          ctx.fillText('   all information from X to Y', panelX + 10, ly);
+        }
+      } else if (mode === 'fork') {
+        ctx.fillText('Z = Loyalty tier', panelX + 10, ly); ly += lh;
+        ctx.fillText('X = Discount received', panelX + 10, ly); ly += lh;
+        ctx.fillText('Y = Purchase rate', panelX + 10, ly); ly += lh + 8;
+        ctx.fillStyle = 'rgba(108,99,255,0.7)'; ctx.font = 'bold 11px Inter, system-ui, sans-serif';
+        ctx.fillText(cond ? 'Within each stratum:' : 'Naive (all data):', panelX + 10, ly); ly += lh + 2;
+        ctx.fillStyle = '#e4e4e7'; ctx.font = '11px Inter, system-ui, sans-serif';
+        if (!cond) {
+          ctx.fillText('Naive effect = 0.44', panelX + 10, ly); ly += lh;
+          ctx.fillStyle = 'rgba(239,68,68,0.7)';
+          ctx.fillText('→ Inflated by confounding!', panelX + 10, ly); ly += lh;
+          ctx.fillText('   High-loyalty dominates', panelX + 10, ly);
+        } else {
+          ctx.fillText('Low loyalty:  δ = 0.20', panelX + 10, ly); ly += lh;
+          ctx.fillText('High loyalty: δ = 0.20', panelX + 10, ly); ly += lh;
+          ctx.fillStyle = 'rgba(34,197,94,0.8)';
+          ctx.fillText('→ True effect revealed!', panelX + 10, ly);
+        }
+      } else {
+        ctx.fillText('X = Math score', panelX + 10, ly); ly += lh;
+        ctx.fillText('Y = Writing score', panelX + 10, ly); ly += lh;
+        ctx.fillText('Z = Admitted (X+Y > cutoff)', panelX + 10, ly); ly += lh + 8;
+        ctx.fillStyle = 'rgba(108,99,255,0.7)'; ctx.font = 'bold 11px Inter, system-ui, sans-serif';
+        ctx.fillText(cond ? 'Admitted only (Z=1):' : 'All applicants:', panelX + 10, ly); ly += lh + 2;
+        ctx.fillStyle = '#e4e4e7'; ctx.font = '11px Inter, system-ui, sans-serif';
+        if (!cond) {
+          ctx.fillText('cor(Math, Writing) = 0.012', panelX + 10, ly); ly += lh;
+          ctx.fillStyle = 'rgba(34,197,94,0.7)';
+          ctx.fillText('→ Independent (correct)', panelX + 10, ly);
+        } else {
+          ctx.fillText('cor(Math, Writing) = -0.290', panelX + 10, ly); ly += lh;
+          ctx.fillStyle = 'rgba(239,68,68,0.7)';
+          ctx.fillText('→ Spurious negative cor!', panelX + 10, ly); ly += lh;
+          ctx.fillText('   Low math → must be', panelX + 10, ly); ly += lh;
+          ctx.fillText('   good at writing', panelX + 10, ly);
+        }
+      }
+    }
+
     // Narration
     if (mode === 'chain') {
-      if (!cond) narr.innerHTML = '<strong>Chain (unconditional):</strong> Information flows from X through Z to Y. X and Y are associated — knowing X tells you about Z, which tells you about Y.';
-      else narr.innerHTML = '<strong>Chain (conditioned on Z):</strong> Path is <strong>blocked</strong>. Once you know Z, X provides no additional information about Y. The mediator absorbs all the information.';
+      if (!cond) narr.innerHTML = '<strong>Chain — Smoking → Tar → Cancer:</strong> cor(X, Y) = 0.40. Smoking and cancer are correlated because information flows through tar deposits. X tells you about Z, which tells you about Y.';
+      else narr.innerHTML = '<strong>Chain — conditioned on Tar:</strong> cor(X, Y | Z) = 0.01. Path <strong>blocked</strong>. Once you know the tar level, smoking provides no additional information about cancer. <span style="color:rgba(239,68,68,0.8);">Caution: if Z is a mediator, this kills the causal signal too!</span>';
     } else if (mode === 'fork') {
-      if (!cond) narr.innerHTML = '<strong>Fork (unconditional):</strong> Z is a common cause of both X and Y, creating a spurious correlation. X and Y appear associated even though neither causes the other.';
-      else narr.innerHTML = '<strong>Fork (conditioned on Z):</strong> Path is <strong>blocked</strong>. Holding the common cause fixed removes the spurious correlation. X and Y become independent.';
+      if (!cond) narr.innerHTML = '<strong>Fork — Loyalty → Discount & Purchases:</strong> Naive effect = 0.44 (inflated). Loyalty causes both discounts and high purchase rates. The groups aren\'t comparable — high-loyalty customers dominate the discount group.';
+      else narr.innerHTML = '<strong>Fork — conditioned on Loyalty:</strong> Within each stratum, δ = 0.20. Path <strong>blocked</strong>. Holding the common cause fixed removes confounding. The true causal effect of discounts emerges.';
     } else {
-      if (!cond) narr.innerHTML = '<strong>Collider (unconditional):</strong> Path is <strong>blocked by default</strong>. X and Y are independent — they both cause Z, but knowing one tells you nothing about the other.';
-      else narr.innerHTML = '<strong>Collider (conditioned on Z):</strong> Path is <strong>opened!</strong> Knowing Z creates an "explaining away" effect. If Z is high and X is low, Y must be high. A spurious association appears.';
+      if (!cond) narr.innerHTML = '<strong>Collider — Math & Writing → Admission:</strong> cor(Math, Writing) = 0.012. Path <strong>naturally blocked</strong>. In the full population, math and writing are independent — knowing one tells you nothing about the other.';
+      else narr.innerHTML = '<strong>Collider — conditioned on Admission:</strong> cor(Math, Writing | Admitted) = -0.290. Path <strong>opened!</strong> Among admitted students, low math implies high writing ("explaining away"). Conditioning on the collider created a spurious association.';
     }
 
     if (pathOpen) requestAnimationFrame(bbDraw);
