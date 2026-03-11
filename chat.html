@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Studying Causal Inference with Claude</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+  :root {
+    --bg: #f9f9f8;
+    --msg-bg: #fff;
+    --user-bg: #f3f3ee;
+    --text: #1a1a1a;
+    --text-dim: #6b6b6b;
+    --border: #e5e5e0;
+    --accent: #c96442;
+    --claude-icon: #d4a574;
+    --code-bg: #f5f5f0;
+    --col-width: 680px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a1a;
+      --msg-bg: #1a1a1a;
+      --user-bg: #2a2a28;
+      --text: #ececec;
+      --text-dim: #8a8a8a;
+      --border: #333;
+      --code-bg: #2a2a28;
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Söhne', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Top bar */
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .topbar-logo {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: var(--claude-icon);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 14px;
+  }
+  .topbar-title {
+    font-size: 15px; font-weight: 500; color: var(--text);
+  }
+  .topbar-model {
+    font-size: 12px; color: var(--text-dim); margin-left: 4px;
+    background: var(--code-bg); padding: 2px 8px; border-radius: 4px;
+  }
+
+  /* Chat container */
+  .chat {
+    max-width: var(--col-width);
+    margin: 0 auto;
+    padding: 24px 16px 120px;
+  }
+
+  /* Date header */
+  .date-header {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 12px;
+    margin: 32px 0 24px;
+    position: relative;
+  }
+  .date-header::before, .date-header::after {
+    content: '';
+    position: absolute; top: 50%;
+    width: calc(50% - 60px);
+    height: 1px;
+    background: var(--border);
+  }
+  .date-header::before { left: 0; }
+  .date-header::after { right: 0; }
+
+  /* Messages */
+  .message {
+    margin-bottom: 32px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+    margin-top: 2px;
+  }
+
+  .avatar-claude {
+    background: var(--claude-icon);
+    color: #fff;
+    border-radius: 6px;
+  }
+
+  .avatar-user {
+    background: #8b5cf6;
+    color: #fff;
+    border-radius: 50%;
+  }
+
+  .msg-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .msg-sender {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+
+  .msg-content {
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--text);
+  }
+
+  .msg-content p { margin-bottom: 12px; }
+  .msg-content p:last-child { margin-bottom: 0; }
+
+  .msg-content strong { font-weight: 600; }
+
+  .msg-content blockquote {
+    border-left: 3px solid var(--accent);
+    padding: 8px 16px;
+    margin: 12px 0;
+    color: var(--text);
+    background: var(--code-bg);
+    border-radius: 0 6px 6px 0;
+    font-style: italic;
+  }
+
+  .msg-content ul, .msg-content ol {
+    padding-left: 24px;
+    margin: 8px 0;
+  }
+  .msg-content li { margin: 4px 0; }
+
+  .msg-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 14px;
+  }
+  .msg-content th, .msg-content td {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    text-align: left;
+  }
+  .msg-content th {
+    background: var(--code-bg);
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  .msg-content .formula {
+    background: var(--code-bg);
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 12px 0;
+    overflow-x: auto;
+    text-align: center;
+  }
+
+  .msg-content h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 16px 0 8px;
+  }
+
+  .msg-content h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 12px 0 6px;
+    color: var(--accent);
+  }
+
+  .msg-content code {
+    background: var(--code-bg);
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: 'Söhne Mono', 'Fira Code', monospace;
+  }
+
+  .msg-content .code-block {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 14px 16px;
+    border-radius: 8px;
+    margin: 12px 0;
+    overflow-x: auto;
+    font-family: 'Söhne Mono', 'Fira Code', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: pre;
+  }
+
+  /* Truncation indicator */
+  .truncated {
+    color: var(--text-dim);
+    font-size: 13px;
+    font-style: italic;
+    margin-top: 8px;
+    padding: 6px 12px;
+    border-left: 2px solid var(--border);
+  }
+
+  /* Evaluation badge */
+  .eval {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 4px;
+  }
+  .eval-correct { background: rgba(34,197,94,0.12); color: #16a34a; }
+  .eval-partial { background: rgba(245,158,11,0.12); color: #d97706; }
+  .eval-wrong { background: rgba(239,68,68,0.12); color: #dc2626; }
+
+  /* Section divider */
+  .section-break {
+    text-align: center;
+    margin: 40px 0;
+    color: var(--text-dim);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* Hero header */
+  .hero {
+    text-align: center;
+    padding: 60px 16px 20px;
+    max-width: var(--col-width);
+    margin: 0 auto;
+  }
+  .hero h1 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .hero p {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+  .hero-meta {
+    display: flex; gap: 16px; justify-content: center;
+    margin-top: 12px; flex-wrap: wrap;
+  }
+  .hero-meta span {
+    font-size: 12px;
+    color: var(--text-dim);
+    background: var(--code-bg);
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 40px 16px 60px;
+    color: var(--text-dim);
+    font-size: 13px;
+    max-width: var(--col-width);
+    margin: 0 auto;
+    border-top: 1px solid var(--border);
+  }
+  .footer a { color: var(--accent); text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+
+  /* Responsive */
+  @media (max-width: 720px) {
+    .chat { padding: 16px 12px 80px; }
+    .msg-content { font-size: 14px; }
+    .message { gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="topbar-logo">C</div>
+  <span class="topbar-title">Causal Inference Mid-Term Study Session</span>
+  <span class="topbar-model">Claude Opus 4</span>
+</div>
+
+<!-- Hero -->
+<div class="hero">
+  <h1>Studying Causal Inference with Claude</h1>
+  <p>An extended study session preparing for the Causal Inference mid-term at Columbia Business School, covering potential outcomes through Double ML and sensitivity analysis.</p>
+  <div class="hero-meta">
+    <span>March 10-11, 2026</span>
+    <span>27 topics covered</span>
+    <span>Interactive Q&A format</span>
+  </div>
+</div>
+
+<!-- Chat -->
+<div class="chat">
+
+<div class="date-header">Mar 10, 2026</div>
+
+<!-- ================ 1. OPENING ================ -->
+
+<div class="message">
+  <div class="avatar avatar-user">T</div>
+  <div class="msg-body">
+    <div class="msg-sender">Taewan</div>
+    <div class="msg-content">
+      <p>Initiate the exam helper by guiding me through the key concepts step-by-step. Start with the foundational concepts of the subject matter at a high level. What's Causal Inference?</p>
+    </div>
+  </div>
+</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p>At its core, causal inference answers one question:</p>
+      <blockquote><strong>"What happens to Y if I <em>change</em> X?"</strong></blockquote>
+      <p>This is fundamentally different from asking "What is Y when I <em>observe</em> X?" The first is a question about <strong>intervention</strong>. The second is about <strong>correlation</strong>.</p>
+
+      <h3>The Fundamental Problem</h3>
+      <p>We can never observe what <em>would have happened</em> to the same person under a different treatment. For every unit $i$ and treatment $d$, there exists a <strong>potential outcome</strong> $Y_i^{(D=d)}$. The causal effect is $\delta_i = Y_i^{(D=1)} - Y_i^{(D=0)}$. But you only ever see <strong>one</strong> of these.</p>
+
+      <h3>Why Not Just Compare Groups?</h3>
+      <p>The <strong>naive estimator</strong> $E[Y|D=1] - E[Y|D=0]$ compares those who happened to get treated vs. not. But these groups may differ systematically. The course's discount example: discounts offered during low-sales weeks made the naive estimate <strong>negative</strong> (-0.5), even though the true effect was <strong>positive</strong> (+0.5).</p>
+
+      <h3>Two Paths Forward</h3>
+      <ol>
+        <li><strong>Run an experiment</strong> &mdash; randomize D so it's independent of everything else</li>
+        <li><strong>Use observational data carefully</strong> &mdash; encode causal knowledge as a graph, find the right variables to adjust for</li>
+      </ol>
+      <p>The entire course is about path 2. Can you explain in your own words why the naive estimator can give you the wrong sign?</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================ 2. NAIVE ESTIMATOR ================ -->
+
+<div class="message">
+  <div class="avatar avatar-user">T</div>
+  <div class="msg-body">
+    <div class="msg-sender">Taewan</div>
+    <div class="msg-content">
+      <p>In the naive estimator, the difference between the treatment and control groups can be systematic. The assignment mechanism has to be random in order for this naive estimator to equal the true estimator.</p>
+    </div>
+  </div>
+</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p><span class="eval eval-correct">Correct</span> When assignment is random, $D$ is independent of potential outcomes &mdash; the groups are comparable. The key equation:</p>
+      <div class="formula">$\delta_{\text{naive}} = \delta + \underbrace{E[Y^{(D=0)}|D=1] - E[Y^{(D=0)}|D=0]}_{\text{selection bias}}$</div>
+      <p>The naive estimator equals the true effect <strong>plus</strong> the difference in <em>baseline</em> outcomes between groups. Randomization makes that second term zero. Without it, you're measuring the causal effect <strong>plus</strong> how different the groups already were.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================ 3. BUILDING BLOCKS ================ -->
+
+<div class="section-break">&mdash; Causal Graphs &mdash;</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p>Now let's move to the graph-based framework. There are exactly <strong>three building blocks</strong> in every causal graph:</p>
+      <table>
+        <tr><th>Structure</th><th>Example</th><th>Key Property</th></tr>
+        <tr><td><strong>Chain</strong></td><td>X &rarr; Z &rarr; Y</td><td>Conditioning on Z <strong>blocks</strong> the path</td></tr>
+        <tr><td><strong>Fork</strong></td><td>X &larr; Z &rarr; Y</td><td>Conditioning on Z <strong>blocks</strong> the path</td></tr>
+        <tr><td><strong>Collider</strong></td><td>X &rarr; Z &larr; Y</td><td>Conditioning on Z <strong>opens</strong> the path</td></tr>
+      </table>
+      <p>The first two are intuitive &mdash; hold the middle variable fixed, the endpoints become independent. The collider is the trap: blocked by default, but conditioning on it <em>creates</em> spurious association.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================ 4. CONDITIONING ON ================ -->
+
+<div class="message">
+  <div class="avatar avatar-user">T</div>
+  <div class="msg-body">
+    <div class="msg-sender">Taewan</div>
+    <div class="msg-content">
+      <p>Explain in more detail: "conditioning on." Is it equivalent to "adjusting" and "blocking the path"? Is the goal to block all paths from X to Y except the front door?</p>
+    </div>
+  </div>
+</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p><strong>"Conditioning on," "adjusting for,"</strong> and <strong>"controlling for"</strong> all mean the same thing &mdash; holding a variable fixed when analyzing data. Three equivalent ways:</p>
+      <ol>
+        <li><strong>Subsetting:</strong> Split data by Z, analyze each subset separately</li>
+        <li><strong>Including in regression:</strong> $\beta_X$ in $Y = \beta_X X + \beta_Z Z$ gives X's effect after accounting for Z</li>
+        <li><strong>Sample selection:</strong> If your dataset only contains admitted students, you are implicitly conditioning on admission &mdash; even without including it in a regression</li>
+      </ol>
+      <p><strong>Important:</strong> Conditioning is a tool &mdash; it can <strong>block or open</strong> depending on structure. It doesn't always block. For chains and forks, it blocks. For colliders, it opens.</p>
+      <p>And yes &mdash; the goal is to block all <strong>non-causal</strong> (back-door) paths while keeping causal paths open. The remaining association <em>is</em> the causal effect.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================ 5. COLLIDER ================ -->
+
+<div class="message">
+  <div class="avatar avatar-user">T</div>
+  <div class="msg-body">
+    <div class="msg-sender">Taewan</div>
+    <div class="msg-content">
+      <p>By only looking at admitted students, we are conditioning on Z=1. Knowing a student is admitted gives us information about the relationship between X and Y: if the student has a low X, then Y is likely to be high.</p>
+    </div>
+  </div>
+</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p><span class="eval eval-correct">Exactly</span> In the full population, math and writing are independent. But restricting to admitted students creates an informational constraint: they got in <em>somehow</em>. Low math implies high writing, high math implies low writing. A spurious negative correlation appears.</p>
+      <p>The notebooks confirmed this numerically:</p>
+      <ul>
+        <li>Full population correlation: <strong>0.012</strong> (basically zero)</li>
+        <li>Admitted students only: <strong>-0.290</strong> (strongly negative)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ================ 6. D-SEPARATION ================ -->
+
+<div class="section-break">&mdash; d-Separation &amp; Back-Door Criterion &mdash;</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p><strong>d-Separation:</strong> A path between X and Y is blocked by set Z if somewhere along it there is:</p>
+      <ol>
+        <li>A chain or fork node <strong>that is in Z</strong> (you blocked it), OR</li>
+        <li>A collider node <strong>not in Z</strong> with no descendant in Z (naturally blocked)</li>
+      </ol>
+      <p><strong>Back-Door Criterion</strong> for choosing adjustment set Z:</p>
+      <ol>
+        <li><strong>No descendant of X</strong> is in Z</li>
+        <li>Z <strong>blocks all back-door paths</strong> (paths entering X from behind)</li>
+      </ol>
+      <p>Let's test your understanding. Consider this graph:</p>
+      <div class="code-block">U ──→ X ──→ M ──→ Y
+│                  ↑
+└─────────────────┘</div>
+      <p>U causes both X and Y. X causes Y through M. What's a valid adjustment set for the causal effect of X on Y?</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================ 7. GRAPH EXERCISE ================ -->
+
+<div class="message">
+  <div class="avatar avatar-user">T</div>
+  <div class="msg-body">
+    <div class="msg-sender">Taewan</div>
+    <div class="msg-content">
+      <p>Adjustment set: none. X &rarr; M &rarr; Y is a chain structure &mdash; conditioning on M will block the causal path from X to Y, closing the front-door path.</p>
+    </div>
+  </div>
+</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p><span class="eval eval-partial">Half right</span> Your chain reasoning is correct &mdash; conditioning on M would block the causal path. But "none" is <strong>wrong</strong>.</p>
+      <p>The back-door path $X \leftarrow U \rightarrow Y$ is a <strong>fork that's open by default</strong>. U is confounding. The correct answer: <strong>adjust for {U}</strong>.</p>
+      <table>
+        <tr><th>Adjustment set</th><th>Back-door X&larr;U&rarr;Y</th><th>Causal X&rarr;M&rarr;Y</th><th>Verdict</th></tr>
+        <tr><td>None</td><td>Open (confounded!)</td><td>Open</td><td>Biased</td></tr>
+        <tr><td><strong>{U}</strong></td><td><strong>Blocked</strong></td><td><strong>Open</strong></td><td><strong>Correct</strong></td></tr>
+        <tr><td>{M}</td><td>Open</td><td>Blocked</td><td>Bad &mdash; kills causal signal</td></tr>
+        <tr><td>{U, M}</td><td>Blocked</td><td>Blocked</td><td>Bad &mdash; kills causal signal</td></tr>
+      </table>
+      <p><strong>Key:</strong> "Do nothing" means confounding flows freely through forks. You need to <em>actively block</em> back-door paths. And the goal is <strong>not</strong> d-separation of X and Y &mdash; that would remove all association. You want to block non-causal paths while keeping causal paths open.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================ 8. BDA NUMERICAL ================ -->
+
+<div class="section-break">&mdash; Back-Door Adjustment: Numerical Example &mdash;</div>
+
+<div class="message">
+  <div class="avatar avatar-user">T</div>
+  <div class="msg-body">
+    <div class="msg-sender">Taewan</div>
+    <div class="msg-content">
+      <p>Proceed with the next steps. Give me a numerical example.</p>
+    </div>
+  </div>
+</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p><strong>E-commerce example:</strong> Does offering a discount (X) increase purchases (Y)? Loyalty tier (Z) confounds &mdash; high-loyalty customers both receive more discounts and buy more.</p>
+      <table>
+        <tr><th>Z (loyalty)</th><th>X (discount)</th><th>Count</th><th>Purchase rate</th></tr>
+        <tr><td>Low</td><td>No discount</td><td>400</td><td>0.20</td></tr>
+        <tr><td>Low</td><td>Discount</td><td>100</td><td>0.40</td></tr>
+        <tr><td>High</td><td>No discount</td><td>100</td><td>0.60</td></tr>
+        <tr><td>High</td><td>Discount</td><td>400</td><td>0.80</td></tr>
+      </table>
+      <p><strong>Naive estimate:</strong> 0.44 &mdash; inflated, includes the effect of loyalty.</p>
+      <p><strong>BDA (correct):</strong></p>
+      <div class="formula">
+        $E[Y|do(X=1)] = 0.40 \times 0.5 + 0.80 \times 0.5 = 0.60$<br>
+        $E[Y|do(X=0)] = 0.20 \times 0.5 + 0.60 \times 0.5 = 0.40$<br>
+        $\delta_{\text{BDA}} = 0.60 - 0.40 = 0.20$
+      </div>
+      <p>Within each stratum, the discount effect is 0.20. The naive was 0.44 because the discount group was dominated by high-loyalty customers.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================ 9. SUPPORT ================ -->
+
+<div class="section-break">&mdash; The Support Assumption &mdash;</div>
+
+<div class="message">
+  <div class="avatar avatar-user">T</div>
+  <div class="msg-body">
+    <div class="msg-sender">Taewan</div>
+    <div class="msg-content">
+      <p>Explain the support checking process in detail. What does the propensity score distribution look like? What does distribution overlap mean?</p>
+    </div>
+  </div>
+</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p>The <strong>support assumption</strong> (aka positivity):</p>
+      <div class="formula">$0 < P(X=x \mid Z=z) < 1$ for all $z$ where $P(Z=z) > 0$</div>
+      <p>For every confounder value where people exist, there must be a nonzero probability of <em>each</em> treatment level. If low-loyalty customers <strong>never</strong> get discounts, $P(X=1|Z=0) = 0$ &mdash; the counterfactual is unobserved for the entire stratum.</p>
+      <p>You check this by plotting propensity score distributions for each group. The <strong>overlap region</strong> is where both distributions have positive density &mdash; that's where causal inference is possible. The danger zones are the tails where only one group exists.</p>
+      <table>
+        <tr><th>Method</th><th>Without support</th></tr>
+        <tr><td>Stratification</td><td>Can't compute &mdash; cell is empty</td></tr>
+        <tr><td>Matching</td><td>Can't find a match</td></tr>
+        <tr><td>IPW</td><td>Weight = 1/0 = &infin; &mdash; blows up</td></tr>
+        <tr><td>Regression / ML</td><td><strong>Extrapolates</strong> &mdash; trusts the model in unseen regions</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ================ 10. CONTINUOUS Z ================ -->
+
+<div class="section-break">&mdash; Continuous / High-Dimensional Z &mdash;</div>
+
+<div class="message">
+  <div class="avatar avatar-user">T</div>
+  <div class="msg-body">
+    <div class="msg-sender">Taewan</div>
+    <div class="msg-content">
+      <p>Let's move on to continuous or high-dimensional Z problems.</p>
+    </div>
+  </div>
+</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p>Everything so far used discrete, low-dimensional Z. The BDA formula $\sum_z E[Y|X=x, Z=z] \cdot P(Z=z)$ breaks in two ways:</p>
+      <ol>
+        <li><strong>Continuous Z &rarr; infinite strata.</strong> You can't compute $E[Y|X=1, Z=42{,}387.51]$. Binning creates <strong>residual confounding</strong>.</li>
+        <li><strong>High-dim Z &rarr; curse of dimensionality.</strong> 10 binary confounders = $2^{10} = 1{,}024$ strata. Most cells empty.</li>
+      </ol>
+      <p>Four solutions, each handling Z differently:</p>
+      <table>
+        <tr><th>Method</th><th>Strategy</th></tr>
+        <tr><td><strong>Matching</strong></td><td>Find twins via distance metric or propensity score (1-D)</td></tr>
+        <tr><td><strong>IPW</strong></td><td>Collapse Z into propensity score, reweight</td></tr>
+        <tr><td><strong>Regression/BDA</strong></td><td>Let the model learn the functional form</td></tr>
+        <tr><td><strong>Double ML</strong></td><td>ML models partial out Z from both sides</td></tr>
+      </table>
+      <p>Matching and IPW <strong>reduce dimensionality</strong> (Z &rarr; 1 scalar). Regression and Double ML <strong>bypass it</strong> (let flexible models handle the conditioning).</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================ 11. MATCHING ================ -->
+
+<div class="section-break">&mdash; Matching Methods &mdash;</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p><strong>Exact Matching:</strong> Match on identical Z. Problem: curse of dimensionality &mdash; most units have no exact match.</p>
+      <p><strong>Nearest-Neighbor:</strong> Use Mahalanobis distance $d(Z_i, Z_j) = \sqrt{(Z_i - Z_j)^\top S^{-1} (Z_i - Z_j)}$. <strong>Calipers</strong> set a maximum allowed distance &mdash; if no match within range, drop the unit rather than make a bad match.</p>
+      <p><strong>Propensity Score Matching (Rosenbaum &amp; Rubin, 1983):</strong> Matching on the single scalar $e(Z) = P(X=1|Z)$ is sufficient. 50 covariates &rarr; 1 number.</p>
+      <p>Can you explain: <strong>why is matching on the propensity score sufficient, rather than needing to match on all of Z?</strong></p>
+    </div>
+  </div>
+</div>
+
+<!-- ================ 12. PS DEEP DIVE ================ -->
+
+<div class="message">
+  <div class="avatar avatar-user">T</div>
+  <div class="msg-body">
+    <div class="msg-sender">Taewan</div>
+    <div class="msg-content">
+      <p>What does Control (X=0) group's propensity score P(X=1|Z) mean? Density is the number of observations for each propensity score? Most similar people are also treated &mdash; does it mean that among the near-one propensity score group, most are in group X=1? Is equivalent density a pre-requisite for propensity score matching? What about score 0.3, where the density for X=0 is much larger than X=1?</p>
+    </div>
+  </div>
+</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p><strong>P(X=1|Z) for controls:</strong> Every unit gets a propensity score &mdash; it's the predicted probability of being treated given their covariates. Control units still have a score; it just means that despite, say, a 70% chance, they happened <em>not</em> to be treated.</p>
+      <p><strong>Density:</strong> Relative frequency (smoothed histogram), not raw count. Height shows concentration at that score value.</p>
+      <p><strong>Near-one = mostly treated:</strong> Yes, exactly. At $e(Z) = 0.95$, 95% of similar units are treated. Very few controls exist there &mdash; matching becomes hard at the extremes.</p>
+      <p><strong>Equal density not required.</strong> At score 0.3, 200 controls and 20 treated is fine. PSM works by <strong>pairing individuals</strong>, not averaging groups. Pick a treated unit, find the nearest control, record the difference. Controls can be reused (matching with replacement). The only problem is when one group has <strong>zero</strong> units &mdash; that's a support violation.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================ 13. PS SUFFICIENCY ================ -->
+
+<div class="message">
+  <div class="avatar avatar-user">T</div>
+  <div class="msg-body">
+    <div class="msg-sender">Taewan</div>
+    <div class="msg-content">
+      <p>Why is matching on the propensity score sufficient, rather than matching on all of Z? And why can't we just match to a nearest unit when one group has zero at a given propensity score?</p>
+    </div>
+  </div>
+</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p>The <strong>Rosenbaum-Rubin theorem</strong>:</p>
+      <div class="formula">If $X \perp\!\!\!\perp (Y^{(0)}, Y^{(1)}) \mid Z$, then $X \perp\!\!\!\perp (Y^{(0)}, Y^{(1)}) \mid e(Z)$</div>
+      <p><strong>Intuition:</strong> The propensity score is a <strong>sufficient summary</strong> of Z for removing confounding. Among all units with $e(Z) = 0.4$ &mdash; regardless of their specific Z values &mdash; treatment is effectively a coin flip with 40% probability. Some are young, rich, urban. Others are old, poor, rural. But within this group, who got treated is <strong>as good as random</strong>.</p>
+      <p>As for matching when one group is empty: you <em>can</em>, but if the nearest control has $e(Z) = 0.55$ and your treated unit has $e(Z) = 0.95$, these are <strong>systematically different people</strong>. The "as-good-as-random" argument breaks down. That's why <strong>calipers</strong> exist &mdash; drop the unit rather than make a bad match. But dropping units changes the estimand to ATT for the matchable subpopulation.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================ 14. IPW ================ -->
+
+<div class="section-break">&mdash; Inverse Propensity Weighting &mdash;</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p>Matching finds twins. IPW takes a different approach: <strong>reweight the entire sample</strong> so it looks like an experiment. Each unit gets weight $w_i = 1/P(X = x_i \mid Z_i)$.</p>
+      <p>The <strong>"surprising units" intuition:</strong> A high-loyalty customer who <em>didn't</em> get a discount is unusual and highly informative. IPW upweights these rare units:</p>
+      <table>
+        <tr><th>Unit type</th><th>P(X|Z)</th><th>Weight</th><th>Why</th></tr>
+        <tr><td>High-loyalty, treated</td><td>0.90</td><td>1.1</td><td>Expected &mdash; low info</td></tr>
+        <tr><td>High-loyalty, <strong>untreated</strong></td><td>0.10</td><td><strong>10.0</strong></td><td>Surprising &mdash; high info</td></tr>
+        <tr><td>Low-loyalty, untreated</td><td>0.80</td><td>1.25</td><td>Expected &mdash; low info</td></tr>
+        <tr><td>Low-loyalty, <strong>treated</strong></td><td>0.20</td><td><strong>5.0</strong></td><td>Surprising &mdash; high info</td></tr>
+      </table>
+      <p>Can you explain: <strong>how does IPW relate to the back-door adjustment formula?</strong></p>
+    </div>
+  </div>
+</div>
+
+<!-- ================ 15. IPW vs BDA ================ -->
+
+<div class="message">
+  <div class="avatar avatar-user">T</div>
+  <div class="msg-body">
+    <div class="msg-sender">Taewan</div>
+    <div class="msg-content">
+      <p>BDA uses P(Z=z) as a weight and calculates the weighted sum of Y given Z=z (back-door conditioned); a weighted sum across different z values. IPW uses a weight P(X|Z) in the denominator, boosting the lower-chance event outcomes; treating such events as having higher information value; sum across different x value groups (i.e., X=0, 1, etc.) while z is given.</p>
+    </div>
+  </div>
+</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p><span class="eval eval-correct">Good intuition on both.</span> One refinement: IPW <strong>doesn't condition on Z</strong> in the summation. It sums over all units in the treatment group, using the weight to undo confounding <em>without ever stratifying</em>. That's its power &mdash; works without binning Z.</p>
+      <p>They're <strong>algebraically equivalent</strong>, just rearranged:</p>
+      <ul>
+        <li><strong>BDA:</strong> $E[Y|do(X=x)] = \sum_z E[Y|X=x, Z=z] \cdot P(Z=z)$ &mdash; stratify, weight by population share</li>
+        <li><strong>IPW:</strong> $E[Y|do(X=x)] = \frac{1}{N}\sum_{i: x_i=x} \frac{y_i}{P(X=x_i|Z_i)}$ &mdash; weight units individually, no strata</li>
+      </ul>
+      <p>Same formula, different failure modes: BDA breaks when Z is high-dimensional (empty strata). IPW breaks when $e(Z)$ is extreme (weights explode).</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================ 16. IPW NOTATION ================ -->
+
+<div class="message">
+  <div class="avatar avatar-user">T</div>
+  <div class="msg-body">
+    <div class="msg-sender">Taewan</div>
+    <div class="msg-content">
+      <p>IPW sums over all units in the treatment group only? "i" means every unit, and there's N of them? What does $i: x_i = x$ mean in the summation formula? How does IPW take the control group into account (i.e., surprisingly untreated)? How would you write $z_i$ and $P(X=0|Z=z_i)$ for control group + high loyalty?</p>
+    </div>
+  </div>
+</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p>The ATE formula has <strong>two separate sums</strong>:</p>
+      <div class="formula">$\hat{\delta}_{\text{IPW}} = \underbrace{\frac{1}{N} \sum_{i:\, x_i=1} \frac{y_i}{e(Z_i)}}_{\text{treated only}} - \underbrace{\frac{1}{N} \sum_{i:\, x_i=0} \frac{y_i}{1 - e(Z_i)}}_{\text{control only}}$</div>
+      <p>$i: x_i = 1$ means "loop over treated units only" &mdash; it's a filter on the summation. The "surprisingly untreated" units appear in the <strong>second sum</strong>. $N$ = total sample size (both groups).</p>
+      <h4>Control + High Loyalty, concretely:</h4>
+      <ul>
+        <li>$x_i = 0$ (control), $Z_i = \text{High}$, $e(Z_i) = 0.80$</li>
+        <li>Denominator: $P(X=0|Z=\text{High}) = 1 - 0.80 = 0.20$</li>
+        <li>Weight: $1/0.20 = 5.0$ &mdash; 80% of similar people got treated, but this one didn't. Surprising. Represents 5 similar people.</li>
+      </ul>
+      <p><strong>General rule:</strong> denominator is always the probability of what <em>actually happened</em>:</p>
+      <div class="formula">$w_i = \begin{cases} 1/e(Z_i) & \text{if treated} \\ 1/(1-e(Z_i)) & \text{if control} \end{cases}$</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================ 17. REGRESSION ================ -->
+
+<div class="section-break">&mdash; Regression for Causal Inference &mdash;</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p>Matching and IPW model treatment assignment. Regression flips this: <strong>model the outcome directly.</strong></p>
+      <p>For $Y = \beta_0 + \beta_X X + \beta_Z Z + \epsilon$, the claim is $\beta_X$ = ATE. Plug into BDA: at any fixed $Z = z$, the difference $E[Y|X=1,Z=z] - E[Y|X=0,Z=z] = \beta_X$ &mdash; the Z terms cancel identically. OLS is doing BDA implicitly.</p>
+      <div class="truncated">Covered: naive regression bias, heterogeneous effects, interaction terms</div>
+    </div>
+  </div>
+</div>
+
+<div class="message">
+  <div class="avatar avatar-user">T</div>
+  <div class="msg-body">
+    <div class="msg-sender">Taewan</div>
+    <div class="msg-content">
+      <p>How do the Z terms cancel? How can we ensure each corresponding term is the same between X=1 and X=0? What does it mean that the treatment effect $\delta$ varies with Z?</p>
+    </div>
+  </div>
+</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p>At fixed $Z = z$:</p>
+      <div class="formula">$E[Y|X=1, Z=z] = \beta_0 + \beta_X + \beta_Z z$<br>$E[Y|X=0, Z=z] = \beta_0 + \beta_Z z$</div>
+      <p>Subtract: $\beta_0$ cancels. $\beta_Z z$ cancels. What's left is $\beta_X$ &mdash; and it's the same <strong>for every z</strong>. The model <em>assumes</em> Z's contribution to Y is identical regardless of treatment. Only $\beta_X X$ changes when X flips.</p>
+      <p><strong>"$\delta$ varies with Z":</strong> The treatment works differently for different people. Example: a discount boosts purchases by 0.30 for low-loyalty but only 0.10 for high-loyalty. Now $\delta(z) \neq$ constant. A constant-effect OLS gives a weighted average &mdash; but weighted by Z's distribution <em>within the treated group</em>, not the population. So $\beta_X \neq$ ATE.</p>
+      <p>Fix 1: interaction term $\beta_{XZ} X \cdot Z$. Fix 2: <strong>BDA predict-and-average</strong> &mdash; fit any model, predict under $X=1$ and $X=0$ for everyone, average the differences. Handles heterogeneity automatically.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================ 18. EXTRAPOLATION ================ -->
+
+<div class="section-break">&mdash; Model Extrapolation &mdash;</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p>Can you explain: <strong>why is model-based extrapolation dangerous, and how does it relate to the support assumption?</strong></p>
+    </div>
+  </div>
+</div>
+
+<div class="message">
+  <div class="avatar avatar-user">T</div>
+  <div class="msg-body">
+    <div class="msg-sender">Taewan</div>
+    <div class="msg-content">
+      <p>Model-based extrapolation is dangerous because regression's prediction solely depends on the existing data, even though the data points of the group that is of interest don't exist, which may fail to capture unique characteristics of the group if it is fundamentally different. This applies the same from the support assumption, where stratification won't work without any data points in a segment to compare the treatment effect.</p>
+    </div>
+  </div>
+</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p><span class="eval eval-correct">Strong answer.</span> Two refinements:</p>
+      <p><strong>1. Sharpen "depends on existing data."</strong> All methods depend on data. The specific danger is that regression <strong>imposes a functional form</strong> and extends it into regions with no data. "Y increases linearly with Z in [0.2, 0.8], so it must continue at Z = 0.95" &mdash; but maybe the relationship curves or reverses. Matching/IPW would refuse. Regression fills in the blank with an assumption and gives a confidence interval as if reliable.</p>
+      <p><strong>2. "Fundamentally different" has a name:</strong> <strong>lack of common support</strong>. The hierarchy of honesty:</p>
+      <table>
+        <tr><th>Method</th><th>No-overlap region</th><th>Failure</th></tr>
+        <tr><td>Exact matching</td><td>Drops the unit</td><td>Honest</td></tr>
+        <tr><td>PSM with calipers</td><td>Drops the unit</td><td>Honest</td></tr>
+        <tr><td>IPW</td><td>Weight &rarr; &infin;</td><td>Breaks loudly</td></tr>
+        <tr><td>Regression</td><td>Extrapolates</td><td><strong>Breaks silently</strong></td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ================ 19. DOUBLE ML ================ -->
+
+<div class="section-break">&mdash; Double ML &mdash;</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p>BDA requires correctly specifying $E[Y|X,Z]$. With complex Z you'd use ML, but <strong>ML regularization introduces bias</strong> that contaminates $\hat{\delta}$ and invalidates confidence intervals.</p>
+      <p><strong>Double ML residualizes both sides:</strong></p>
+      <ol>
+        <li>Model $\hat{E}[Y|Z]$ and $\hat{E}[X|Z]$ (the propensity score!) with any ML</li>
+        <li>Compute residuals: $\tilde{Y}_i = Y_i - \hat{E}[Y|Z_i]$, $\tilde{X}_i = X_i - \hat{E}[X|Z_i]$</li>
+        <li>Regress: $\hat{\delta} = \sum \tilde{X}_i \tilde{Y}_i / \sum \tilde{X}_i^2$</li>
+      </ol>
+      <p><strong>Cross-fitting</strong> prevents ML bias from leaking through: train on all data <em>except</em> fold k, predict residuals on held-out fold k.</p>
+      <div class="truncated">Covered: partially linear model assumption, Frisch-Waugh-Lovell connection</div>
+    </div>
+  </div>
+</div>
+
+<div class="message">
+  <div class="avatar avatar-user">T</div>
+  <div class="msg-body">
+    <div class="msg-sender">Taewan</div>
+    <div class="msg-content">
+      <p>The residual regression outcome $\delta$ is equivalent to $\beta_1 = \text{cov}(x, y)/\text{var}(x)$ in a simple linear regression? The slope &mdash; one unit change of x's effect on y?</p>
+      <p>Does Double ML assume a linear model, given that $\delta$ is constant? How can this fit nonlinear models? Is the $g(Z)$ term only subject to ML, while $\delta$ is estimated by linear regression?</p>
+      <p>What is CATE, how does it relate to R-Learner, and how is it implemented with varying treatment effects across Z?</p>
+    </div>
+  </div>
+</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p><strong>Yes, exactly.</strong> Since residuals are mean-zero, $\sum \tilde{X}_i \tilde{Y}_i / \sum \tilde{X}_i^2 = \text{cov}(\tilde{X}, \tilde{Y}) / \text{var}(\tilde{X})$. One unit of "unexplained-by-Z treatment variation" causes $\delta$ units of "unexplained-by-Z outcome variation."</p>
+      <p><strong>Partially linear, not fully linear.</strong> The model is $Y = \delta X + g(Z) + \epsilon$ &mdash; linear in X (one coefficient), but $g(Z)$ can be anything. Division of labor: <strong>ML handles complex $g(Z)$</strong> (only needs good prediction); <strong>OLS handles $\delta$</strong> (valid inference).</p>
+      <p><strong>CATE</strong> = Conditional Average Treatment Effect: $\tau(z) = E[Y^{(1)} - Y^{(0)} | Z = z]$. Double ML gives one number; CATE gives a function.</p>
+      <p><strong>R-Learner:</strong> Compute residuals as in Double ML, then fit $\hat{\tau}(Z)$ minimizing $\sum_i (\tilde{Y}_i - \tau(Z_i) \cdot \tilde{X}_i)^2$. Double ML asks "what's the single slope?" R-Learner asks "how does the slope change with Z?"</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================ 20. ML BIAS ================ -->
+
+<div class="message">
+  <div class="avatar avatar-user">T</div>
+  <div class="msg-body">
+    <div class="msg-sender">Taewan</div>
+    <div class="msg-content">
+      <p>Explain in detail why "ML models are biased by design" and why this matters for causal inference but not for prediction.</p>
+    </div>
+  </div>
+</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p>Every model's error: <strong>Error = Bias&sup2; + Variance + Noise</strong>. ML deliberately introduces bias to reduce variance &mdash; LASSO shrinks coefficients, tree depth limits prevent memorization, dropout forces redundancy.</p>
+      <p><strong>Fine for prediction:</strong> If adding bias reduces variance by more than it costs, total error decreases. A house price model that's systematically $10K low but stable beats one that's unbiased but swings $200K.</p>
+      <p><strong>Fatal for causal inference:</strong> You need an unbiased $\hat{\delta}$ and valid CIs. LASSO shrinks $\hat{\beta}_X$ toward zero. Your CI might be $[0.08, 0.16]$ when truth is $0.25$ &mdash; narrow, precise, <strong>doesn't contain the truth</strong>. Regularization bias doesn't shrink with more data. The CI is permanently centered on the wrong value.</p>
+      <p><strong>Double ML's fix:</strong> Use ML only for <strong>nuisance</strong> models (bias is OK &mdash; you just need good prediction). Estimate $\delta$ with OLS on residuals (one parameter, no regularization). Cross-fitting ensures the bias doesn't leak.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================ 21. SENSITIVITY ================ -->
+
+<div class="section-break">&mdash; Sensitivity Analysis &mdash;</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p>Every method assumes the DAG is correct. Sensitivity analysis asks: <strong>what if we're wrong?</strong></p>
+      <p>"How strong would an unmeasured confounder U have to be to explain away our estimated treatment effect?"</p>
+      <p>If $U \to X$ and $U \to Y$ exist unblocked, the bias is $\beta_U \cdot (E[U|X=1] - E[U|X=0])$. The <strong>breakdown point</strong> $\alpha^*$ is the minimum confounder strength that zeros out the effect.</p>
+      <table>
+        <tr><th>Breakdown</th><th>Interpretation</th><th>Verdict</th></tr>
+        <tr><td>Very large</td><td>Need confounder stronger than anything observed</td><td>Robust</td></tr>
+        <tr><td>Small</td><td>A mild confounder kills the effect</td><td>Fragile</td></tr>
+        <tr><td>Negative</td><td>Adding confounding strengthens the effect</td><td>Very robust</td></tr>
+      </table>
+      <p><strong>Analogy:</strong> "My bridge holds 10 tons. Sensitivity analysis says it survives up to 25 tons. I don't know if a 25-ton truck will ever cross &mdash; but I know my safety margin."</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================ 22. METHOD COMPARISON ================ -->
+
+<div class="section-break">&mdash; Putting It All Together &mdash;</div>
+
+<div class="message">
+  <div class="avatar avatar-user">T</div>
+  <div class="msg-body">
+    <div class="msg-sender">Taewan</div>
+    <div class="msg-content">
+      <p>Give me a full method comparison &mdash; "when to use which" &mdash; to tie everything together for the exam.</p>
+    </div>
+  </div>
+</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <h3>The Decision Tree</h3>
+      <ol>
+        <li><strong>Can you run an experiment?</strong> &rarr; Randomize. Naive estimator + bootstrap. Done.</li>
+        <li><strong>Valid back-door set Z?</strong> &rarr; No: need IV/RDD/diff-in-diff (not on this exam).</li>
+        <li><strong>What does Z look like?</strong> Discrete &rarr; Stratification. Continuous &rarr; Matching. High-dim &rarr; step 4.</li>
+        <li><strong>Which modeling approach?</strong>
+          <ul>
+            <li>Trust linear model &rarr; <strong>OLS</strong></li>
+            <li>Trust outcome model &rarr; <strong>BDA predict-and-average</strong></li>
+            <li>Trust propensity model &rarr; <strong>IPW</strong></li>
+            <li>Don't trust either &rarr; <strong>Doubly-robust</strong></li>
+            <li>Need valid CIs with ML &rarr; <strong>Double ML</strong></li>
+            <li>Want $\tau(Z)$ &rarr; <strong>R-Learner</strong></li>
+          </ul>
+        </li>
+        <li><strong>Always do sensitivity analysis.</strong></li>
+      </ol>
+
+      <h3>One-Sentence Summaries</h3>
+      <ul>
+        <li><strong>Stratification:</strong> Split by Z, compare within strata, weight by P(Z)</li>
+        <li><strong>Matching:</strong> Find a twin, compare outcomes</li>
+        <li><strong>IPW:</strong> Reweight by 1/P(X|Z) to simulate an experiment</li>
+        <li><strong>OLS:</strong> Fit a line, read off $\beta_X$</li>
+        <li><strong>BDA:</strong> Fit any model, predict under X=1 and X=0, average</li>
+        <li><strong>Double ML:</strong> ML handles confounding, OLS estimates $\delta$</li>
+        <li><strong>Doubly-robust:</strong> Belt and suspenders &mdash; consistent if either model is correct</li>
+      </ul>
+
+      <h3>Three Assumptions Everything Rests On</h3>
+      <ol>
+        <li><strong>Graph structure</strong> &mdash; DAG is correct. No statistical test for this.</li>
+        <li><strong>No unmeasured confounders</strong> &mdash; Sensitivity analysis stress-tests this.</li>
+        <li><strong>Support/overlap</strong> &mdash; $0 < P(X=1|Z) < 1$. Checkable via PS distributions.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<div class="message">
+  <div class="avatar avatar-user">T</div>
+  <div class="msg-body">
+    <div class="msg-sender">Taewan</div>
+    <div class="msg-content">
+      <p>This was incredibly helpful. Thank you.</p>
+    </div>
+  </div>
+</div>
+
+<div class="message">
+  <div class="avatar avatar-claude">C</div>
+  <div class="msg-body">
+    <div class="msg-sender">Claude</div>
+    <div class="msg-content">
+      <p>Good luck on the exam. The conceptual chain you built &mdash; from potential outcomes through graphs, matching, IPW, regression, Double ML, and sensitivity &mdash; is exactly how these pieces fit together. You're well prepared.</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- .chat -->
+
+<div class="footer">
+  <p>Study session conducted with <a href="https://claude.ai">Claude</a> by Anthropic &middot; <a href="https://tyoon10.github.io/causal-inference/">Interactive Study Module</a> &middot; <a href="https://github.com/tyoon10/causal-inference">Source</a></p>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false
+  });
+});
+</script>
+</body>
+</html>
