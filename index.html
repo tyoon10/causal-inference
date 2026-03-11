@@ -576,7 +576,26 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
     </div>
   </div>
 
-  <div class="card">
+  <!-- Interactive Building Blocks Visualization -->
+  <h2 class="section-title">Interactive: Three Building Blocks</h2>
+  <div class="card" style="padding:24px;">
+    <p style="font-size:0.9rem;margin-bottom:14px;">Click a structure to see how information flows. Toggle conditioning on Z to see the path open or close.</p>
+    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+      <button class="bb-btn bb-active" onclick="bbSet('chain')" id="bbBtnChain" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:600;">Chain: X→Z→Y</button>
+      <button class="bb-btn" onclick="bbSet('fork')" id="bbBtnFork" style="padding:8px 18px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">Fork: X←Z→Y</button>
+      <button class="bb-btn" onclick="bbSet('collider')" id="bbBtnCollider" style="padding:8px 18px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">Collider: X→Z←Y</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+      <label style="font-size:0.88rem;cursor:pointer;display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="bbCondition" onchange="bbDraw()" style="width:18px;height:18px;cursor:pointer;">
+        <span>Condition on Z</span>
+      </label>
+    </div>
+    <canvas id="bbCanvas" width="680" height="300" style="width:100%;max-width:680px;display:block;margin:0 auto;border-radius:8px;"></canvas>
+    <div id="bbNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
     <h3>Summary Table</h3>
     <table class="comparison-table">
       <tr><th>Structure</th><th>Unconditional</th><th>Conditioning on middle node</th></tr>
@@ -646,6 +665,20 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
       <div class="step-num">4</div>
       <div class="step-content"><strong>Verify:</strong> No node in $Z$ is a descendant of $X$, and all back-door paths are blocked</div>
     </div>
+  </div>
+
+  <!-- Interactive d-Separation Exercise -->
+  <h2 class="section-title">Interactive: d-Separation Exercise</h2>
+  <div class="card" style="padding:24px;">
+    <p style="font-size:0.9rem;margin-bottom:14px;">Click on nodes to add/remove them from the conditioning set Z. The visualization shows which paths are blocked or open, and whether X and Y are d-separated.</p>
+    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+      <button class="ds-graph-btn ds-active" onclick="dsSetGraph(0)" id="dsBtn0" style="padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.84rem;font-weight:600;">Graph 1: Fork + Chain</button>
+      <button class="ds-graph-btn" onclick="dsSetGraph(1)" id="dsBtn1" style="padding:8px 16px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.84rem;">Graph 2: Collider</button>
+      <button class="ds-graph-btn" onclick="dsSetGraph(2)" id="dsBtn2" style="padding:8px 16px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.84rem;">Graph 3: Full DAG</button>
+    </div>
+    <canvas id="dsCanvas" width="680" height="340" style="width:100%;max-width:680px;display:block;margin:0 auto;border-radius:8px;cursor:pointer;"></canvas>
+    <div id="dsNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+    <div style="margin-top:8px;font-size:0.82rem;color:var(--text-dim);">Click a node to condition on it (highlighted). Click again to remove. X and Y cannot be conditioned on.</div>
   </div>
 
   <h2 class="section-title">Stratification &amp; Coarsening</h2>
@@ -1963,6 +1996,428 @@ document.addEventListener('keydown', (e) => {
     drawPropensityPlot(parseInt(slider.value));
     updateDiagnosis(parseInt(slider.value));
   }, 100);
+})();
+
+// ===== Three Building Blocks Interactive =====
+(function() {
+  const BW = 680, BH = 300;
+  const canvas = document.getElementById('bbCanvas');
+  if (!canvas) return;
+  const narr = document.getElementById('bbNarration');
+  let mode = 'chain';
+
+  window.bbSet = function(m) {
+    mode = m;
+    document.getElementById('bbCondition').checked = false;
+    document.querySelectorAll('.bb-btn').forEach(function(b) {
+      b.style.background = 'var(--card)'; b.style.color = 'var(--text)'; b.style.border = '1px solid var(--border)';
+    });
+    var id = m === 'chain' ? 'bbBtnChain' : m === 'fork' ? 'bbBtnFork' : 'bbBtnCollider';
+    var el = document.getElementById(id);
+    el.style.background = 'var(--accent)'; el.style.color = '#fff'; el.style.border = 'none';
+    bbDraw();
+  };
+
+  window.bbDraw = function() {
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = BW * dpr; canvas.height = BH * dpr;
+    canvas.style.width = BW + 'px'; canvas.style.height = BH + 'px';
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#12141f'; ctx.fillRect(0, 0, BW, BH);
+
+    var cond = document.getElementById('bbCondition').checked;
+    var cx = BW / 2, cy = BH / 2 - 10;
+    var spacing = 180;
+    var xPos = { X: cx - spacing, Z: cx, Y: cx + spacing };
+    var yPos = cy;
+    var nodeR = 32;
+
+    // Determine path status
+    var pathOpen;
+    if (mode === 'chain' || mode === 'fork') {
+      pathOpen = !cond; // conditioning blocks
+    } else {
+      pathOpen = cond; // conditioning opens collider
+    }
+
+    // Draw edges
+    var edges;
+    if (mode === 'chain') edges = [['X','Z'],['Z','Y']];
+    else if (mode === 'fork') edges = [['Z','X'],['Z','Y']];
+    else edges = [['X','Z'],['Y','Z']];
+
+    for (var i = 0; i < edges.length; i++) {
+      var from = edges[i][0], to = edges[i][1];
+      var x1 = xPos[from], x2 = xPos[to];
+      var dx = x2 - x1, dist = Math.abs(dx);
+      var nx = dx / dist;
+      var sx = x1 + nx * nodeR, ex = x2 - nx * nodeR;
+
+      // Edge line
+      ctx.strokeStyle = pathOpen ? 'rgba(108,99,255,0.8)' : 'rgba(255,255,255,0.15)';
+      ctx.lineWidth = pathOpen ? 3 : 2;
+      ctx.beginPath(); ctx.moveTo(sx, yPos); ctx.lineTo(ex, yPos); ctx.stroke();
+
+      // Arrowhead
+      var aSize = 10;
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.beginPath();
+      ctx.moveTo(ex, yPos);
+      ctx.lineTo(ex - nx * aSize, yPos - aSize * 0.5);
+      ctx.lineTo(ex - nx * aSize, yPos + aSize * 0.5);
+      ctx.closePath(); ctx.fill();
+    }
+
+    // Animated flow particles
+    if (pathOpen) {
+      var t = (Date.now() % 2000) / 2000;
+      for (var p = 0; p < 3; p++) {
+        var pt = (t + p * 0.33) % 1;
+        var flowX, flowY = yPos;
+        if (mode === 'chain') {
+          flowX = xPos.X + pt * (xPos.Y - xPos.X);
+        } else if (mode === 'fork') {
+          // fork: flows from Z outward to X and Y
+          if (pt < 0.5) { flowX = xPos.Z - pt * 2 * (xPos.Z - xPos.X); }
+          else { flowX = xPos.Z + (pt - 0.5) * 2 * (xPos.Y - xPos.Z); }
+        } else {
+          // collider opened: info flows X→Z←Y, "explaining away"
+          if (pt < 0.5) { flowX = xPos.X + pt * 2 * (xPos.Z - xPos.X); }
+          else { flowX = xPos.Y - (pt - 0.5) * 2 * (xPos.Y - xPos.Z); }
+        }
+        ctx.fillStyle = 'rgba(108,99,255,0.7)';
+        ctx.beginPath(); ctx.arc(flowX, flowY, 5, 0, 2 * Math.PI); ctx.fill();
+      }
+    }
+
+    // Draw nodes
+    var nodes = ['X', 'Z', 'Y'];
+    for (var n = 0; n < nodes.length; n++) {
+      var name = nodes[n];
+      var nx2 = xPos[name];
+      var isZ = name === 'Z';
+      var condZ = isZ && cond;
+
+      // Node circle
+      if (condZ) {
+        ctx.fillStyle = 'rgba(245,158,11,0.2)';
+        ctx.strokeStyle = 'rgba(245,158,11,0.9)';
+        ctx.lineWidth = 3;
+      } else if (name === 'X' || name === 'Y') {
+        ctx.fillStyle = 'rgba(108,99,255,0.15)';
+        ctx.strokeStyle = 'rgba(108,99,255,0.7)';
+        ctx.lineWidth = 2;
+      } else {
+        ctx.fillStyle = 'rgba(255,255,255,0.05)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctx.lineWidth = 2;
+      }
+      ctx.beginPath(); ctx.arc(nx2, yPos, nodeR, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
+
+      // Node label
+      ctx.fillStyle = condZ ? 'rgba(245,158,11,1)' : '#fff';
+      ctx.font = 'bold 18px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(name, nx2, yPos);
+
+      // Conditioned label
+      if (condZ) {
+        ctx.fillStyle = 'rgba(245,158,11,0.8)';
+        ctx.font = '12px Inter, system-ui, sans-serif';
+        ctx.fillText('conditioned', nx2, yPos + nodeR + 16);
+      }
+    }
+
+    // Path status label
+    var statusY = yPos - nodeR - 30;
+    ctx.font = 'bold 14px Inter, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    if (pathOpen) {
+      ctx.fillStyle = 'rgba(108,99,255,0.9)';
+      ctx.fillText('PATH OPEN — X and Y are associated', cx, statusY);
+    } else {
+      ctx.fillStyle = 'rgba(239,68,68,0.8)';
+      ctx.fillText('PATH BLOCKED — X ⊥ Y | Z', cx, statusY);
+    }
+
+    // Structure label
+    ctx.fillStyle = 'var(--text-dim)'; ctx.font = '12px Inter, system-ui, sans-serif';
+    var structLabel = mode === 'chain' ? 'Chain: X → Z → Y' : mode === 'fork' ? 'Fork: X ← Z → Y' : 'Collider: X → Z ← Y';
+    ctx.fillText(structLabel, cx, BH - 20);
+
+    // Narration
+    if (mode === 'chain') {
+      if (!cond) narr.innerHTML = '<strong>Chain (unconditional):</strong> Information flows from X through Z to Y. X and Y are associated — knowing X tells you about Z, which tells you about Y.';
+      else narr.innerHTML = '<strong>Chain (conditioned on Z):</strong> Path is <strong>blocked</strong>. Once you know Z, X provides no additional information about Y. The mediator absorbs all the information.';
+    } else if (mode === 'fork') {
+      if (!cond) narr.innerHTML = '<strong>Fork (unconditional):</strong> Z is a common cause of both X and Y, creating a spurious correlation. X and Y appear associated even though neither causes the other.';
+      else narr.innerHTML = '<strong>Fork (conditioned on Z):</strong> Path is <strong>blocked</strong>. Holding the common cause fixed removes the spurious correlation. X and Y become independent.';
+    } else {
+      if (!cond) narr.innerHTML = '<strong>Collider (unconditional):</strong> Path is <strong>blocked by default</strong>. X and Y are independent — they both cause Z, but knowing one tells you nothing about the other.';
+      else narr.innerHTML = '<strong>Collider (conditioned on Z):</strong> Path is <strong>opened!</strong> Knowing Z creates an "explaining away" effect. If Z is high and X is low, Y must be high. A spurious association appears.';
+    }
+
+    if (pathOpen) requestAnimationFrame(bbDraw);
+  };
+
+  // Observe L2 tab visibility
+  var obs = new MutationObserver(function() {
+    var panel = document.getElementById('panel-l2');
+    if (panel && panel.classList.contains('active')) bbDraw();
+  });
+  obs.observe(document.getElementById('panel-l2'), { attributes: true, attributeFilter: ['class'] });
+  setTimeout(function() { bbSet('chain'); }, 200);
+})();
+
+// ===== d-Separation Interactive Exercise =====
+(function() {
+  var DW = 680, DH = 340;
+  var canvas = document.getElementById('dsCanvas');
+  if (!canvas) return;
+  var narr = document.getElementById('dsNarration');
+  var graphIdx = 0;
+  var conditioned = {};
+
+  // Graph definitions: nodes [{name, x, y, canCondition}], edges [[from,to]], paths [[node sequence]]
+  var graphs = [
+    { // Graph 1: U→X, U→Y (fork + chain with M)
+      title: 'U → X, U → Y, X → M → Y',
+      nodes: [
+        { name:'U', x:340, y:60, canCondition:true },
+        { name:'X', x:140, y:180, canCondition:false },
+        { name:'M', x:340, y:180, canCondition:true },
+        { name:'Y', x:540, y:180, canCondition:false }
+      ],
+      edges: [['U','X'],['U','Y'],['X','M'],['M','Y']],
+      paths: [
+        { nodes:['X','U','Y'], type:'backdoor', desc:'X ← U → Y (fork)' },
+        { nodes:['X','M','Y'], type:'causal', desc:'X → M → Y (causal chain)' }
+      ],
+      checkPath: function(cond) {
+        var bd = cond['U']; // fork blocked if U conditioned
+        var causal = !cond['M']; // chain blocked if M conditioned
+        return {
+          paths: [
+            { desc:'X ← U → Y', blocked: bd, type:'backdoor' },
+            { desc:'X → M → Y', blocked: !causal, type:'causal' }
+          ],
+          allBackdoorBlocked: bd,
+          causalOpen: causal,
+          validSet: bd && causal
+        };
+      }
+    },
+    { // Graph 2: X→Z←Y (collider)
+      title: 'X → Z ← Y',
+      nodes: [
+        { name:'X', x:140, y:170, canCondition:false },
+        { name:'Z', x:340, y:170, canCondition:true },
+        { name:'Y', x:540, y:170, canCondition:false }
+      ],
+      edges: [['X','Z'],['Y','Z']],
+      paths: [
+        { nodes:['X','Z','Y'], type:'backdoor', desc:'X → Z ← Y (collider)' }
+      ],
+      checkPath: function(cond) {
+        var opened = cond['Z']; // collider opened if Z conditioned
+        return {
+          paths: [
+            { desc:'X → Z ← Y', blocked: !opened, type:'collider' }
+          ],
+          allBackdoorBlocked: !opened,
+          causalOpen: true,
+          validSet: !opened
+        };
+      }
+    },
+    { // Graph 3: Full DAG: U→X, U→Y, X→M→Y, X→Y
+      title: 'U → X, U → Y, X → M → Y, X → Y',
+      nodes: [
+        { name:'U', x:240, y:60, canCondition:true },
+        { name:'X', x:100, y:200, canCondition:false },
+        { name:'M', x:340, y:120, canCondition:true },
+        { name:'Y', x:540, y:200, canCondition:false },
+        { name:'W', x:440, y:60, canCondition:true }
+      ],
+      edges: [['U','X'],['U','Y'],['X','M'],['M','Y'],['X','Y'],['W','M'],['W','Y']],
+      paths: [
+        { desc:'X ← U → Y (fork)' },
+        { desc:'X → M → Y (causal chain)' },
+        { desc:'X → Y (direct causal)' },
+        { desc:'X → M ← W → Y' }
+      ],
+      checkPath: function(cond) {
+        var forkBlocked = !!cond['U'];
+        var chainOpen = !cond['M'];
+        var directOpen = true;
+        // X → M ← W → Y: M is a collider. Conditioning on M opens it.
+        var colliderOpened = !!cond['M'];
+        // If M opened, W blocks if conditioned
+        var wBlocks = colliderOpened && !!cond['W'];
+        var colliderPathProblematic = colliderOpened && !wBlocks;
+
+        return {
+          paths: [
+            { desc:'X ← U → Y', blocked: forkBlocked, type:'backdoor' },
+            { desc:'X → M → Y', blocked: !chainOpen, type:'causal' },
+            { desc:'X → Y', blocked: false, type:'causal' },
+            { desc:'X → M ← W → Y', blocked: !colliderPathProblematic, type: colliderOpened ? 'opened-collider' : 'collider' }
+          ],
+          allBackdoorBlocked: forkBlocked && !colliderPathProblematic,
+          causalOpen: chainOpen || directOpen,
+          validSet: forkBlocked && !colliderPathProblematic && (chainOpen || directOpen)
+        };
+      }
+    }
+  ];
+
+  window.dsSetGraph = function(idx) {
+    graphIdx = idx;
+    conditioned = {};
+    document.querySelectorAll('.ds-graph-btn').forEach(function(b) {
+      b.style.background = 'var(--card)'; b.style.color = 'var(--text)'; b.style.border = '1px solid var(--border)';
+    });
+    var el = document.getElementById('dsBtn' + idx);
+    el.style.background = 'var(--accent)'; el.style.color = '#fff'; el.style.border = 'none';
+    dsDraw();
+  };
+
+  function dsDraw() {
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = DW * dpr; canvas.height = DH * dpr;
+    canvas.style.width = DW + 'px'; canvas.style.height = DH + 'px';
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#12141f'; ctx.fillRect(0, 0, DW, DH);
+
+    var g = graphs[graphIdx];
+    var result = g.checkPath(conditioned);
+    var nodeR = 28;
+
+    // Draw edges with arrowheads
+    for (var i = 0; i < g.edges.length; i++) {
+      var fromName = g.edges[i][0], toName = g.edges[i][1];
+      var fromN = g.nodes.find(function(n){return n.name===fromName;});
+      var toN = g.nodes.find(function(n){return n.name===toName;});
+      var dx = toN.x - fromN.x, dy = toN.y - fromN.y;
+      var dist = Math.sqrt(dx*dx + dy*dy);
+      var ux = dx/dist, uy = dy/dist;
+      var sx = fromN.x + ux*nodeR, sy = fromN.y + uy*nodeR;
+      var ex = toN.x - ux*nodeR, ey = toN.y - uy*nodeR;
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke();
+
+      var aSize = 9;
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.beginPath();
+      ctx.moveTo(ex, ey);
+      ctx.lineTo(ex - ux*aSize - uy*aSize*0.4, ey - uy*aSize + ux*aSize*0.4);
+      ctx.lineTo(ex - ux*aSize + uy*aSize*0.4, ey - uy*aSize - ux*aSize*0.4);
+      ctx.closePath(); ctx.fill();
+    }
+
+    // Draw nodes
+    for (var j = 0; j < g.nodes.length; j++) {
+      var node = g.nodes[j];
+      var isCond = conditioned[node.name];
+      var isXY = node.name === 'X' || node.name === 'Y';
+
+      if (isCond) {
+        ctx.fillStyle = 'rgba(245,158,11,0.2)';
+        ctx.strokeStyle = 'rgba(245,158,11,0.9)';
+        ctx.lineWidth = 3;
+      } else if (isXY) {
+        ctx.fillStyle = 'rgba(108,99,255,0.15)';
+        ctx.strokeStyle = 'rgba(108,99,255,0.7)';
+        ctx.lineWidth = 2.5;
+      } else {
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctx.lineWidth = 2;
+      }
+      ctx.beginPath(); ctx.arc(node.x, node.y, nodeR, 0, 2*Math.PI); ctx.fill(); ctx.stroke();
+
+      ctx.fillStyle = isCond ? 'rgba(245,158,11,1)' : '#fff';
+      ctx.font = 'bold 16px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(node.name, node.x, node.y);
+
+      if (isCond) {
+        ctx.fillStyle = 'rgba(245,158,11,0.7)'; ctx.font = '11px Inter, system-ui, sans-serif';
+        ctx.fillText('in Z', node.x, node.y + nodeR + 14);
+      }
+    }
+
+    // Title
+    ctx.fillStyle = '#9ca3af'; ctx.font = '12px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(g.title, DW/2, DH - 14);
+
+    // Path status display
+    var condSet = Object.keys(conditioned).filter(function(k){return conditioned[k];});
+    var setLabel = condSet.length > 0 ? 'Z = {' + condSet.join(', ') + '}' : 'Z = {} (empty)';
+
+    ctx.fillStyle = '#e4e4e7'; ctx.font = '13px Inter, system-ui, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('Conditioning set: ' + setLabel, 16, DH - 40);
+
+    var verdictX = DW - 16;
+    ctx.textAlign = 'right';
+    if (result.validSet) {
+      ctx.fillStyle = 'rgba(34,197,94,0.9)'; ctx.font = 'bold 13px Inter, system-ui, sans-serif';
+      ctx.fillText('✓ Valid back-door set', verdictX, DH - 40);
+    } else if (result.allBackdoorBlocked && !result.causalOpen) {
+      ctx.fillStyle = 'rgba(239,68,68,0.8)'; ctx.font = 'bold 13px Inter, system-ui, sans-serif';
+      ctx.fillText('✗ Causal path blocked', verdictX, DH - 40);
+    } else {
+      ctx.fillStyle = 'rgba(239,68,68,0.8)'; ctx.font = 'bold 13px Inter, system-ui, sans-serif';
+      ctx.fillText('✗ Back-door path open', verdictX, DH - 40);
+    }
+
+    // Narration
+    var html = '<strong>Paths:</strong><br>';
+    for (var p = 0; p < result.paths.length; p++) {
+      var path = result.paths[p];
+      var icon = path.blocked ? '🔒' : '🔓';
+      var color = path.type === 'causal' ? (path.blocked ? 'rgba(239,68,68,0.8)' : 'rgba(34,197,94,0.8)') :
+                  (path.blocked ? 'rgba(34,197,94,0.8)' : 'rgba(239,68,68,0.8)');
+      var status = path.blocked ? 'blocked' : 'open';
+      html += icon + ' <span style="color:' + color + '">' + path.desc + ' — <strong>' + status + '</strong></span>';
+      if (path.type === 'causal') html += ' (causal)';
+      else if (path.type === 'backdoor') html += ' (back-door)';
+      else if (path.type === 'collider') html += ' (collider — naturally blocked)';
+      else if (path.type === 'opened-collider') html += ' (collider — opened by conditioning!)';
+      html += '<br>';
+    }
+    narr.innerHTML = html;
+  }
+
+  // Click handler
+  canvas.addEventListener('click', function(e) {
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = DW / rect.width;
+    var mx = (e.clientX - rect.left) * scaleX;
+    var my = (e.clientY - rect.top) * scaleX;
+    var g = graphs[graphIdx];
+    for (var i = 0; i < g.nodes.length; i++) {
+      var node = g.nodes[i];
+      var dx = mx - node.x, dy = my - node.y;
+      if (dx*dx + dy*dy < 35*35 && node.canCondition) {
+        conditioned[node.name] = !conditioned[node.name];
+        dsDraw();
+        return;
+      }
+    }
+  });
+
+  // Observe L3 tab
+  var obs = new MutationObserver(function() {
+    var panel = document.getElementById('panel-l3');
+    if (panel && panel.classList.contains('active')) dsDraw();
+  });
+  obs.observe(document.getElementById('panel-l3'), { attributes: true, attributeFilter: ['class'] });
+  setTimeout(function() { dsSetGraph(0); }, 250);
 })();
 
 // ===== PSM Step-Through Visualization =====
