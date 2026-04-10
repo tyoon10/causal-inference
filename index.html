@@ -1425,10 +1425,11 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
       <div class="concept-body">
         <p>When $Z$ is binary (0/1):</p>
         <div class="formula-box">
-          $\hat{\delta}_{IV} = \frac{E[Y \mid Z=1] - E[Y \mid Z=0]}{E[X \mid Z=1] - E[X \mid Z=0]}$
+          $\hat{\delta}_{IV} = \frac{E[Y \mid Z=1] - E[Y \mid Z=0]}{E[X \mid Z=1] - E[X \mid Z=0]} = \frac{\alpha_1 \cdot \delta + \gamma}{\alpha_1}$
         </div>
-        <p><strong>Intuition:</strong> The numerator is the <em>reduced-form</em> effect of $Z$ on $Y$. The denominator is the <em>first-stage</em> effect of $Z$ on $X$. Dividing isolates the part of the $Y$ change that flows through $X$.</p>
-        <p style="margin-top:8px;color:var(--text-dim);">If the denominator is small (weak instrument), the estimate becomes unstable &mdash; the <strong>weak instrument problem</strong>.</p>
+        <p><strong>The numerator is NOT zero when exclusion holds.</strong> $Z$ still affects $Y$ &mdash; <em>through $X$</em>. The reduced form $E[Y|Z\!=\!1] - E[Y|Z\!=\!0] = \alpha_1 \cdot \delta$ captures the indirect path $Z \to X \to Y$. The denominator $\alpha_1$ rescales this to a per-unit-of-$X$ effect.</p>
+        <p style="margin-top:8px"><strong>Key decomposition:</strong> When exclusion holds ($\gamma = 0$): $\hat{\delta}_{IV} = \alpha_1 \delta / \alpha_1 = \delta$. When violated: $\hat{\delta}_{IV} = \delta + \gamma/\alpha_1$.</p>
+        <p style="margin-top:8px;color:var(--text-dim);"><strong>Caution:</strong> $\gamma$ is the <em>direct</em> $Z \to Y$ effect, NOT $\text{Cov}(Z,Y)$. The total $\text{Cov}(Z,Y) \propto \alpha_1 \delta + \gamma$ includes the indirect path. Even a valid instrument has nonzero $\text{Cov}(Z,Y)$.</p>
       </div>
     </div>
     <div class="concept-card" onclick="toggleCard(this)">
@@ -1462,17 +1463,18 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
     <div class="concept-card" onclick="toggleCard(this)">
       <div class="concept-header">Contaminated Instruments <span class="badge badge-warning">Warning</span></div>
       <div class="concept-body">
-        <p>What if the exclusion restriction is <em>slightly</em> violated? A small direct $Z \to Y$ effect biases the IV estimate:</p>
-        <div class="formula-box">$\hat{\delta}_{IV} = \delta + \frac{\gamma}{\text{Cov}(Z,X)}$</div>
-        <p>where $\gamma$ is the direct effect of $Z$ on $Y$. With a <strong>weak instrument</strong> (small denominator), even a tiny $\gamma$ causes large bias. Contaminated IV can be <em>more</em> biased than naive OLS.</p>
+        <p>What if the exclusion restriction is <em>slightly</em> violated? The IV estimate becomes:</p>
+        <div class="formula-box">$\hat{\delta}_{IV} = \delta + \frac{\gamma}{\alpha_1}$</div>
+        <p>The bias $\gamma/\alpha_1$ depends on the <strong>ratio</strong> of violation size to first-stage strength. With a weak instrument (small $\alpha_1$), even a tiny $\gamma$ gets amplified massively.</p>
+        <p style="margin-top:8px"><strong>Comparison to naive OLS:</strong> OLS gives $\hat{\beta} = \text{Cov}(X,Y)/\text{Var}(X) = \delta + \text{bias from }U$. OLS picks up ALL $X$-$Y$ association (causal + confounding). IV isolates the $Z$-driven variation but leaks any direct $Z \to Y$ path. When $\gamma/\alpha_1 >$ confounding bias, IV is <em>worse</em> than doing nothing.</p>
       </div>
     </div>
   </div>
 
   <!-- Interactive IV Visualization -->
-  <h2 class="section-title">Interactive: The IV Logic</h2>
+  <h2 class="section-title">Interactive: The IV Logic — Path Decomposition</h2>
   <div class="card" style="padding:24px;">
-    <p style="font-size:0.9rem;margin-bottom:14px;">Drag the instrument strength slider to see how IV estimation works. Watch the two stages and how weak instruments amplify noise.</p>
+    <p style="font-size:0.9rem;margin-bottom:14px;">The Wald estimator divides the <strong>reduced-form</strong> effect (how Z moves Y) by the <strong>first-stage</strong> effect (how Z moves X). Drag the sliders to see how paths combine and how violations propagate.</p>
     <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:14px;">
       <label style="font-size:0.88rem;display:flex;align-items:center;gap:8px;">
         First-stage strength ($\alpha_1$):
@@ -1485,7 +1487,7 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
         <span id="ivGammaLabel" style="font-family:monospace;min-width:40px;">0.00</span>
       </label>
     </div>
-    <canvas id="ivCanvas" width="750" height="380" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
+    <canvas id="ivCanvas" width="750" height="620" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
     <div id="ivNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
   </div>
 </div>
@@ -5135,7 +5137,7 @@ document.addEventListener('keydown', (e) => {
 
 // ===== L7: Instrumental Variables Visualization =====
 (function() {
-  var CW = 750, CH = 380;
+  var CW = 750, CH = 620;
   var canvas = document.getElementById('ivCanvas');
   if (!canvas) return;
   var strSlider = document.getElementById('ivStrengthSlider');
@@ -5145,6 +5147,7 @@ document.addEventListener('keydown', (e) => {
   var narr = document.getElementById('ivNarration');
 
   var trueEffect = 0.50;
+  var confoundBias = 0.30;
 
   function draw() {
     var alpha1 = parseFloat(strSlider.value);
@@ -5159,16 +5162,17 @@ document.addEventListener('keydown', (e) => {
     ctx.scale(dpr, dpr);
     ctx.fillStyle = '#12141f'; ctx.fillRect(0, 0, CW, CH);
 
-    // Draw DAG
-    var nodes = [
-      { label: 'Z', x: 100, y: 80, color: '#22c55e', desc: 'Instrument' },
-      { label: 'X', x: 280, y: 80, color: '#6c63ff', desc: 'Treatment' },
-      { label: 'Y', x: 460, y: 80, color: '#00d2ff', desc: 'Outcome' },
-      { label: 'U', x: 370, y: 200, color: '#ef4444', desc: 'Unobserved' }
-    ];
+    // ============================================================
+    // SECTION 1: DAG with separated paths (top 220px)
+    // ============================================================
+    var dagCY = 100; // node center Y
+    var Zx = 120, Xx = 340, Yx = 560, Uy = 200, Ux = 450;
 
-    // Edges
-    function drawArrow(x1, y1, x2, y2, color, width, dashed) {
+    ctx.fillStyle = '#e4e4e7'; ctx.font = 'bold 13px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Causal Graph — Path Decomposition', CW / 2, 18);
+
+    // Helper: draw arrow between two points
+    function drawArrow(x1, y1, x2, y2, color, width, dashed, label, labelSide) {
       var angle = Math.atan2(y2 - y1, x2 - x1);
       var r = 28;
       var sx = x1 + r * Math.cos(angle), sy = y1 + r * Math.sin(angle);
@@ -5177,92 +5181,320 @@ document.addEventListener('keydown', (e) => {
       if (dashed) ctx.setLineDash([6, 4]); else ctx.setLineDash([]);
       ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke();
       ctx.setLineDash([]);
-      // arrowhead
       ctx.fillStyle = color;
       ctx.beginPath();
       ctx.moveTo(ex, ey);
       ctx.lineTo(ex - 10 * Math.cos(angle - 0.3), ey - 10 * Math.sin(angle - 0.3));
       ctx.lineTo(ex - 10 * Math.cos(angle + 0.3), ey - 10 * Math.sin(angle + 0.3));
       ctx.closePath(); ctx.fill();
+      if (label) {
+        ctx.fillStyle = color; ctx.font = 'bold 11px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+        var mx = (sx + ex) / 2, my = (sy + ey) / 2;
+        var off = labelSide === 'below' ? 16 : -10;
+        ctx.fillText(label, mx, my + off);
+      }
     }
 
-    drawArrow(100, 80, 280, 80, '#22c55e', alpha1 * 3 + 1, false); // Z -> X
-    drawArrow(280, 80, 460, 80, '#6c63ff', 2.5, false); // X -> Y
-    drawArrow(370, 200, 280, 80, '#ef4444', 2, true); // U -> X
-    drawArrow(370, 200, 460, 80, '#ef4444', 2, true); // U -> Y
+    // Helper: draw curved arrow (for direct Z->Y path)
+    function drawCurvedArrow(x1, y1, x2, y2, curveY, color, width, label) {
+      var r = 28;
+      var angle1 = Math.atan2(curveY - y1, (x1 + x2) / 2 - x1);
+      var angle2 = Math.atan2(curveY - y2, (x1 + x2) / 2 - x2);
+      var sx = x1 + r * Math.cos(angle1), sy = y1 + r * Math.sin(angle1);
+      var ex = x2 + r * Math.cos(angle2), ey = y2 + r * Math.sin(angle2);
+      var cpx = (x1 + x2) / 2, cpy = curveY;
+
+      ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(sx, sy); ctx.quadraticCurveTo(cpx, cpy, ex, ey); ctx.stroke();
+
+      // Arrowhead at end
+      var t = 0.98;
+      var prevX = (1-t)*(1-t)*sx + 2*(1-t)*t*cpx + t*t*ex;
+      var prevY = (1-t)*(1-t)*sy + 2*(1-t)*t*cpy + t*t*ey;
+      var arrAngle = Math.atan2(ey - prevY, ex - prevX);
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(ex, ey);
+      ctx.lineTo(ex - 10 * Math.cos(arrAngle - 0.3), ey - 10 * Math.sin(arrAngle - 0.3));
+      ctx.lineTo(ex - 10 * Math.cos(arrAngle + 0.3), ey - 10 * Math.sin(arrAngle + 0.3));
+      ctx.closePath(); ctx.fill();
+
+      if (label) {
+        ctx.fillStyle = color; ctx.font = 'bold 11px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(label, cpx, cpy + (curveY < y1 ? -8 : 16));
+      }
+    }
+
+    // INDIRECT PATH: Z -> X -> Y (straight, through center)
+    var indirectAlpha = gamma > 0.01 ? 0.7 : 1.0;
+    drawArrow(Zx, dagCY, Xx, dagCY, 'rgba(34,197,94,' + indirectAlpha + ')', Math.max(1.5, alpha1 * 3), false, 'α₁ = ' + alpha1.toFixed(2), 'above');
+    drawArrow(Xx, dagCY, Yx, dagCY, 'rgba(108,99,255,' + indirectAlpha + ')', 2.5, false, 'δ = ' + trueEffect.toFixed(2), 'above');
+
+    // Indirect path label
+    ctx.fillStyle = 'rgba(34,197,94,0.5)'; ctx.font = '10px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Indirect path: Z → X → Y', (Zx + Yx) / 2, dagCY - 42);
+    ctx.fillText('strength = α₁ · δ = ' + (alpha1 * trueEffect).toFixed(2), (Zx + Yx) / 2, dagCY - 30);
+
+    // DIRECT PATH: Z -> Y (curved below, only when gamma > 0)
     if (gamma > 0.01) {
-      drawArrow(100, 80, 460, 80, 'rgba(245,158,11,0.8)', gamma * 4 + 1, false); // Z -> Y direct
-      ctx.fillStyle = 'rgba(245,158,11,0.8)'; ctx.font = 'bold 11px Inter, system-ui, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('γ=' + gamma.toFixed(2), 280, 60);
+      var curveBelow = dagCY + 70;
+      drawCurvedArrow(Zx, dagCY, Yx, dagCY, curveBelow, 'rgba(245,158,11,0.85)', Math.max(1.5, gamma * 5), 'γ = ' + gamma.toFixed(2));
+
+      ctx.fillStyle = 'rgba(245,158,11,0.5)'; ctx.font = '10px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('Direct path: Z → Y (VIOLATION)', (Zx + Yx) / 2, curveBelow + 24);
+      ctx.fillText('strength = γ = ' + gamma.toFixed(2), (Zx + Yx) / 2, curveBelow + 36);
     }
 
-    // Edge labels
-    ctx.fillStyle = '#22c55e'; ctx.font = 'bold 11px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText('α₁=' + alpha1.toFixed(2), 190, 70);
-    ctx.fillStyle = '#6c63ff';
-    ctx.fillText('δ=' + trueEffect.toFixed(2), 370, 70);
+    // CONFOUNDING PATH: U -> X, U -> Y (dashed)
+    drawArrow(Ux, Uy, Xx, dagCY, 'rgba(239,68,68,0.6)', 1.5, true, null, null);
+    drawArrow(Ux, Uy, Yx, dagCY, 'rgba(239,68,68,0.6)', 1.5, true, null, null);
 
     // Nodes
+    var nodes = [
+      { label: 'Z', x: Zx, y: dagCY, color: '#22c55e', desc: 'Instrument' },
+      { label: 'X', x: Xx, y: dagCY, color: '#6c63ff', desc: 'Treatment' },
+      { label: 'Y', x: Yx, y: dagCY, color: '#00d2ff', desc: 'Outcome' },
+      { label: 'U', x: Ux, y: Uy, color: '#ef4444', desc: 'Unobserved' }
+    ];
     for (var i = 0; i < nodes.length; i++) {
       var n = nodes[i];
       ctx.beginPath(); ctx.arc(n.x, n.y, 26, 0, 2 * Math.PI);
-      ctx.fillStyle = n.label === 'U' ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.05)';
+      ctx.fillStyle = n.label === 'U' ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.05)';
       ctx.strokeStyle = n.color; ctx.lineWidth = n.label === 'U' ? 1.5 : 2.5;
       if (n.label === 'U') ctx.setLineDash([4, 3]); else ctx.setLineDash([]);
       ctx.fill(); ctx.stroke(); ctx.setLineDash([]);
       ctx.fillStyle = n.color; ctx.font = 'bold 16px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
       ctx.fillText(n.label, n.x, n.y + 6);
       ctx.fillStyle = '#9ca3af'; ctx.font = '10px Inter, system-ui, sans-serif';
-      ctx.fillText(n.desc, n.x, n.y + 42);
+      ctx.fillText(n.desc, n.x, n.y - 34);
     }
 
-    // Estimation results panel
-    var pY = 260;
-    var ivEst = trueEffect + (alpha1 > 0.01 ? gamma / alpha1 : 999);
-    var naiveEst = trueEffect + 0.30; // confounding bias
+    // ============================================================
+    // SECTION 2: Wald Estimator Decomposition (middle 200px)
+    // ============================================================
+    var waldY = 250;
+    ctx.fillStyle = '#e4e4e7'; ctx.font = 'bold 13px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Wald Estimator — Reduced-Form Decomposition', CW / 2, waldY);
 
-    ctx.fillStyle = 'rgba(255,255,255,0.03)'; ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
-    ctx.fillRect(50, pY, 300, 100); ctx.strokeRect(50, pY, 300, 100);
-    ctx.fillRect(400, pY, 300, 100); ctx.strokeRect(400, pY, 300, 100);
+    var reducedForm = alpha1 * trueEffect + gamma;
+    var firstStage = alpha1;
+    var ivEst = firstStage > 0.01 ? reducedForm / firstStage : 999;
 
-    // Naive OLS
-    ctx.fillStyle = '#ef4444'; ctx.font = 'bold 12px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText('Naive OLS (biased by U)', 200, pY + 20);
-    ctx.fillStyle = '#e4e4e7'; ctx.font = '14px Inter, system-ui, sans-serif';
-    ctx.fillText('β̂ = ' + naiveEst.toFixed(2), 200, pY + 45);
-    ctx.fillStyle = 'rgba(239,68,68,0.7)'; ctx.font = '11px Inter, system-ui, sans-serif';
-    ctx.fillText('Bias = +' + (naiveEst - trueEffect).toFixed(2) + ' (confounding)', 200, pY + 68);
-    ctx.fillStyle = '#9ca3af'; ctx.font = '10px Inter, system-ui, sans-serif';
-    ctx.fillText('True δ = ' + trueEffect.toFixed(2), 200, pY + 88);
+    // Bar visualization: numerator and denominator as stacked components
+    var barL = 60, barW = 280, barH = 28, barGap = 14;
 
-    // IV estimate
-    var ivColor = gamma < 0.01 ? '#22c55e' : (Math.abs(ivEst - trueEffect) < 0.15 ? '#f59e0b' : '#ef4444');
-    ctx.fillStyle = ivColor; ctx.font = 'bold 12px Inter, system-ui, sans-serif';
-    ctx.fillText('IV Estimate' + (gamma > 0.01 ? ' (contaminated)' : ''), 550, pY + 20);
-    ctx.fillStyle = '#e4e4e7'; ctx.font = '14px Inter, system-ui, sans-serif';
+    // NUMERATOR: E[Y|Z=1] - E[Y|Z=0] = α₁·δ + γ
+    var numY = waldY + 20;
+    ctx.fillStyle = '#9ca3af'; ctx.font = '11px Inter, system-ui, sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText('Numerator:', barL - 8, numY + barH / 2 + 4);
+    ctx.fillStyle = 'rgba(255,255,255,0.03)'; ctx.fillRect(barL, numY, barW, barH);
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1; ctx.strokeRect(barL, numY, barW, barH);
+
+    var maxNum = 1.0; // scale reference
+    var indirectW = Math.min(barW, (alpha1 * trueEffect / maxNum) * barW);
+    var directW = Math.min(barW - indirectW, (gamma / maxNum) * barW);
+
+    // Indirect portion (green)
+    ctx.fillStyle = 'rgba(34,197,94,0.35)';
+    ctx.fillRect(barL, numY, indirectW, barH);
+    ctx.strokeStyle = 'rgba(34,197,94,0.6)'; ctx.lineWidth = 1; ctx.strokeRect(barL, numY, indirectW, barH);
+    if (indirectW > 50) {
+      ctx.fillStyle = 'rgba(34,197,94,0.9)'; ctx.font = 'bold 10px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('α₁·δ = ' + (alpha1 * trueEffect).toFixed(2), barL + indirectW / 2, numY + barH / 2 + 4);
+    }
+
+    // Direct portion (orange, only if gamma > 0)
+    if (gamma > 0.01) {
+      ctx.fillStyle = 'rgba(245,158,11,0.35)';
+      ctx.fillRect(barL + indirectW, numY, directW, barH);
+      ctx.strokeStyle = 'rgba(245,158,11,0.6)'; ctx.lineWidth = 1;
+      ctx.strokeRect(barL + indirectW, numY, directW, barH);
+      if (directW > 30) {
+        ctx.fillStyle = 'rgba(245,158,11,0.9)'; ctx.font = 'bold 10px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('γ = ' + gamma.toFixed(2), barL + indirectW + directW / 2, numY + barH / 2 + 4);
+      }
+    }
+
+    // Numerator total
+    ctx.fillStyle = '#e4e4e7'; ctx.font = '11px Inter, system-ui, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('= E[Y|Z=1] − E[Y|Z=0] = ' + reducedForm.toFixed(3), barL + barW + 10, numY + barH / 2 + 4);
+
+    // Division line
+    var divY = numY + barH + barGap / 2;
+    ctx.strokeStyle = '#e4e4e7'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(barL, divY); ctx.lineTo(barL + barW, divY); ctx.stroke();
+
+    // DENOMINATOR: E[X|Z=1] - E[X|Z=0] = α₁
+    var denY = divY + barGap / 2;
+    ctx.fillStyle = '#9ca3af'; ctx.font = '11px Inter, system-ui, sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText('Denominator:', barL - 8, denY + barH / 2 + 4);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.03)'; ctx.fillRect(barL, denY, barW, barH);
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1; ctx.strokeRect(barL, denY, barW, barH);
+
+    var denomW = Math.min(barW, (alpha1 / maxNum) * barW);
+    ctx.fillStyle = 'rgba(34,197,94,0.25)';
+    ctx.fillRect(barL, denY, denomW, barH);
+    ctx.strokeStyle = 'rgba(34,197,94,0.5)'; ctx.lineWidth = 1; ctx.strokeRect(barL, denY, denomW, barH);
+    ctx.fillStyle = 'rgba(34,197,94,0.9)'; ctx.font = 'bold 10px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('α₁ = ' + alpha1.toFixed(2), barL + denomW / 2, denY + barH / 2 + 4);
+
+    ctx.fillStyle = '#e4e4e7'; ctx.font = '11px Inter, system-ui, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('= E[X|Z=1] − E[X|Z=0] = ' + firstStage.toFixed(3), barL + barW + 10, denY + barH / 2 + 4);
+
+    // Result arrow
+    var resY = denY + barH + 16;
+    ctx.fillStyle = '#e4e4e7'; ctx.font = 'bold 13px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+    var waldResult;
     if (alpha1 < 0.08) {
-      ctx.fillText('δ̂ᵢᵥ = UNSTABLE', 550, pY + 45);
+      waldResult = 'δ̂ᵢᵥ = UNSTABLE (÷ ≈ 0)';
+      ctx.fillStyle = '#ef4444';
     } else {
-      ctx.fillText('δ̂ᵢᵥ = ' + ivEst.toFixed(2), 550, pY + 45);
+      waldResult = 'δ̂ᵢᵥ = ' + reducedForm.toFixed(3) + ' / ' + firstStage.toFixed(3) + ' = ' + ivEst.toFixed(3);
+      ctx.fillStyle = gamma < 0.01 ? '#22c55e' : '#f59e0b';
     }
-    ctx.fillStyle = 'rgba(' + (gamma < 0.01 ? '34,197,94' : '245,158,11') + ',0.7)';
-    ctx.font = '11px Inter, system-ui, sans-serif';
-    var ivBias = alpha1 < 0.08 ? '∞ (weak instrument!)' : (ivEst - trueEffect).toFixed(3);
-    ctx.fillText('Bias = ' + ivBias, 550, pY + 68);
-    ctx.fillStyle = '#9ca3af'; ctx.font = '10px Inter, system-ui, sans-serif';
-    var formula = gamma > 0.01 ? 'δ + γ/Cov(Z,X) = ' + trueEffect.toFixed(2) + ' + ' + gamma.toFixed(2) + '/' + alpha1.toFixed(2) : 'δ = ' + trueEffect.toFixed(2) + ' (unbiased)';
-    ctx.fillText(formula, 550, pY + 88);
+    ctx.fillText(waldResult, barL + barW / 2, resY);
 
-    // Update narration
-    if (alpha1 < 0.10 && gamma < 0.01) {
-      narr.innerHTML = '<strong style="color:#ef4444;">Weak instrument problem.</strong> The first stage (α₁ = ' + alpha1.toFixed(2) + ') is too weak — $Z$ barely affects $X$. The IV estimate becomes extremely noisy and unreliable. Even small violations of the exclusion restriction get amplified by division by a near-zero denominator.';
-    } else if (alpha1 < 0.10 && gamma > 0.01) {
-      narr.innerHTML = '<strong style="color:#ef4444;">Worst case: weak instrument + exclusion violation.</strong> With α₁ = ' + alpha1.toFixed(2) + ' and γ = ' + gamma.toFixed(2) + ', the contamination bias γ/α₁ = ' + (gamma/alpha1).toFixed(2) + ' is <em>massive</em>. The IV estimate is more biased than naive OLS. This is the most dangerous scenario.';
-    } else if (gamma < 0.01) {
-      narr.innerHTML = '<strong style="color:#22c55e;">Valid IV with strong first stage.</strong> The instrument explains α₁ = ' + alpha1.toFixed(2) + ' of the variation in $X$. With the exclusion restriction satisfied (γ = 0), the IV estimate recovers the true causal effect δ = ' + trueEffect.toFixed(2) + ' without bias. Compare to naive OLS which is biased by +0.30 from the confounding through $U$.';
+    // Decomposition formula on the right
+    var fmX = 480, fmY = waldY + 20;
+    ctx.fillStyle = 'rgba(255,255,255,0.03)'; ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
+    ctx.fillRect(fmX, fmY, 250, 115); ctx.strokeRect(fmX, fmY, 250, 115);
+
+    ctx.fillStyle = '#e4e4e7'; ctx.font = 'bold 11px Inter, system-ui, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('IV Estimate Decomposition', fmX + 12, fmY + 18);
+
+    ctx.font = '11px Inter, system-ui, sans-serif';
+    ctx.fillStyle = 'rgba(34,197,94,0.9)';
+    ctx.fillText('α₁·δ / α₁ = δ = ' + trueEffect.toFixed(2), fmX + 12, fmY + 42);
+    ctx.fillStyle = '#9ca3af'; ctx.font = '10px Inter, system-ui, sans-serif';
+    ctx.fillText('(causal effect — what you want)', fmX + 12, fmY + 56);
+
+    if (gamma > 0.01) {
+      ctx.fillStyle = 'rgba(245,158,11,0.9)'; ctx.font = '11px Inter, system-ui, sans-serif';
+      ctx.fillText('+ γ / α₁ = ' + (gamma / alpha1).toFixed(3) + '  (bias!)', fmX + 12, fmY + 78);
+      ctx.fillStyle = '#9ca3af'; ctx.font = '10px Inter, system-ui, sans-serif';
+      ctx.fillText('(exclusion violation ÷ first-stage)', fmX + 12, fmY + 92);
     } else {
-      narr.innerHTML = '<strong style="color:#f59e0b;">Contaminated instrument.</strong> The direct effect γ = ' + gamma.toFixed(2) + ' violates the exclusion restriction. The IV estimate is biased by γ/Cov(Z,X) = ' + (gamma/alpha1).toFixed(3) + '. With a strong first stage (α₁ = ' + alpha1.toFixed(2) + '), the contamination is manageable. ' + (Math.abs(ivEst - trueEffect) < Math.abs(naiveEst - trueEffect) ? 'IV is still less biased than naive OLS.' : '<strong>IV is now MORE biased than OLS!</strong>');
+      ctx.fillStyle = 'rgba(34,197,94,0.6)'; ctx.font = '11px Inter, system-ui, sans-serif';
+      ctx.fillText('+ 0  (exclusion restriction holds)', fmX + 12, fmY + 78);
+      ctx.fillStyle = '#9ca3af'; ctx.font = '10px Inter, system-ui, sans-serif';
+      ctx.fillText('γ = 0 → no bias from direct path', fmX + 12, fmY + 92);
+    }
+
+    ctx.fillStyle = '#e4e4e7'; ctx.font = 'bold 11px Inter, system-ui, sans-serif';
+    var totalStr = alpha1 < 0.08 ? '= UNSTABLE' : '= ' + ivEst.toFixed(3);
+    ctx.fillText('Total: δ̂ᵢᵥ ' + totalStr, fmX + 12, fmY + 110);
+
+    // ============================================================
+    // SECTION 3: Three-Way Comparison (bottom 200px)
+    // ============================================================
+    var cmpY = 410;
+    ctx.fillStyle = '#e4e4e7'; ctx.font = 'bold 13px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Estimator Comparison', CW / 2, cmpY);
+
+    var naiveEst = trueEffect + confoundBias;
+
+    // Three boxes side by side
+    var boxW = 210, boxH = 140, boxGap = 20;
+    var box1X = 35, box2X = box1X + boxW + boxGap, box3X = box2X + boxW + boxGap;
+    var boxTop = cmpY + 14;
+
+    // Box helper
+    function drawEstBox(bx, by, title, titleColor, est, estStr, breakdown, breakdownColors, verdict, verdictColor) {
+      ctx.fillStyle = 'rgba(255,255,255,0.03)'; ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+      ctx.fillRect(bx, by, boxW, boxH); ctx.strokeRect(bx, by, boxW, boxH);
+
+      ctx.fillStyle = titleColor; ctx.font = 'bold 12px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(title, bx + boxW / 2, by + 20);
+
+      ctx.fillStyle = '#e4e4e7'; ctx.font = 'bold 18px Inter, system-ui, sans-serif';
+      ctx.fillText(estStr, bx + boxW / 2, by + 48);
+
+      for (var b = 0; b < breakdown.length; b++) {
+        ctx.fillStyle = breakdownColors[b]; ctx.font = '10px Inter, system-ui, sans-serif';
+        ctx.fillText(breakdown[b], bx + boxW / 2, by + 68 + b * 14);
+      }
+
+      // Verdict bar at bottom
+      ctx.fillStyle = verdictColor + '0.08)'; ctx.fillRect(bx + 1, by + boxH - 26, boxW - 2, 25);
+      ctx.fillStyle = verdictColor + '0.9)'; ctx.font = 'bold 10px Inter, system-ui, sans-serif';
+      ctx.fillText(verdict, bx + boxW / 2, by + boxH - 10);
+    }
+
+    // 1. True Effect
+    drawEstBox(box1X, boxTop, 'True Causal Effect', '#22c55e',
+      trueEffect, 'δ = ' + trueEffect.toFixed(2),
+      ['The actual X → Y effect', 'What we want to estimate'],
+      ['#9ca3af', '#9ca3af'],
+      'GROUND TRUTH', 'rgba(34,197,94,');
+
+    // 2. Naive OLS
+    drawEstBox(box2X, boxTop, 'Naive OLS', '#ef4444',
+      naiveEst, 'β̂ = ' + naiveEst.toFixed(2),
+      ['= Cov(X,Y) / Var(X)',
+       '= δ + bias from U',
+       '= ' + trueEffect.toFixed(2) + ' + ' + confoundBias.toFixed(2),
+       'Captures ALL X-Y association'],
+      ['#9ca3af', '#9ca3af', 'rgba(239,68,68,0.7)', '#9ca3af'],
+      'BIASED: +' + confoundBias.toFixed(2) + ' from confounding', 'rgba(239,68,68,');
+
+    // 3. IV Estimate
+    var ivBias = alpha1 >= 0.08 ? ivEst - trueEffect : NaN;
+    var ivEstStr = alpha1 < 0.08 ? 'UNSTABLE' : 'δ̂ᵢᵥ = ' + ivEst.toFixed(2);
+    var ivBreakdown, ivBreakdownColors, ivVerdict, ivVerdictColor;
+
+    if (alpha1 < 0.08) {
+      ivBreakdown = ['= (α₁·δ + γ) / α₁', 'First stage ≈ 0 → ÷ by zero', 'Small γ → huge bias', 'NEVER use weak instruments'];
+      ivBreakdownColors = ['#9ca3af', 'rgba(239,68,68,0.7)', 'rgba(239,68,68,0.7)', '#ef4444'];
+      ivVerdict = 'DANGER: weak instrument'; ivVerdictColor = 'rgba(239,68,68,';
+    } else if (gamma < 0.01) {
+      ivBreakdown = ['= (α₁·δ) / α₁', '= δ (causal effect!)', 'No direct Z→Y path', 'Only uses Z-driven variation in X'];
+      ivBreakdownColors = ['#9ca3af', 'rgba(34,197,94,0.8)', 'rgba(34,197,94,0.6)', '#9ca3af'];
+      ivVerdict = 'UNBIASED ✓'; ivVerdictColor = 'rgba(34,197,94,';
+    } else {
+      ivBreakdown = ['= (α₁·δ + γ) / α₁', '= δ + γ/α₁', '= ' + trueEffect.toFixed(2) + ' + ' + (gamma/alpha1).toFixed(3), 'Direct path leaks into estimate'];
+      ivBreakdownColors = ['#9ca3af', '#9ca3af', 'rgba(245,158,11,0.7)', 'rgba(245,158,11,0.6)'];
+      var ivBiasAbs = Math.abs(ivBias);
+      var olsBiasAbs = Math.abs(naiveEst - trueEffect);
+      ivVerdict = ivBiasAbs < olsBiasAbs ? 'BIAS: +' + ivBias.toFixed(3) + ' (less than OLS)' : 'BIAS: +' + ivBias.toFixed(3) + ' (WORSE than OLS!)';
+      ivVerdictColor = ivBiasAbs < olsBiasAbs ? 'rgba(245,158,11,' : 'rgba(239,68,68,';
+    }
+
+    drawEstBox(box3X, boxTop, 'IV (Wald) Estimate', gamma < 0.01 ? '#22c55e' : '#f59e0b',
+      ivEst, ivEstStr, ivBreakdown, ivBreakdownColors, ivVerdict, ivVerdictColor);
+
+    // ============================================================
+    // SECTION 4: Key insight callout
+    // ============================================================
+    var insightY = boxTop + boxH + 14;
+    ctx.fillStyle = 'rgba(108,99,255,0.06)'; ctx.strokeStyle = 'rgba(108,99,255,0.2)'; ctx.lineWidth = 1;
+    ctx.fillRect(35, insightY, CW - 70, 34); ctx.strokeRect(35, insightY, CW - 70, 34);
+
+    ctx.fillStyle = '#e4e4e7'; ctx.font = '11px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+    if (gamma < 0.01 && alpha1 >= 0.08) {
+      ctx.fillText('Key: Z affects Y only through X → the numerator E[Y|Z=1]−E[Y|Z=0] = α₁·δ is NOT zero (it flows through X!)', CW / 2, insightY + 14);
+      ctx.fillStyle = '#9ca3af'; ctx.font = '10px Inter, system-ui, sans-serif';
+      ctx.fillText('The exclusion restriction means no DIRECT Z→Y effect — but the INDIRECT effect Z→X→Y makes the numerator nonzero', CW / 2, insightY + 28);
+    } else if (gamma > 0.01 && alpha1 >= 0.08) {
+      ctx.fillText('Numerator now has two sources: indirect (α₁·δ = ' + (alpha1 * trueEffect).toFixed(2) + ') + direct (γ = ' + gamma.toFixed(2) + ') = ' + reducedForm.toFixed(2) + ' — dividing by α₁ doesn\'t cancel γ', CW / 2, insightY + 14);
+      ctx.fillStyle = '#9ca3af'; ctx.font = '10px Inter, system-ui, sans-serif';
+      ctx.fillText('The γ term "leaks" through: δ̂ = δ + γ/α₁. Weak first stage (small α₁) amplifies this leak.', CW / 2, insightY + 28);
+    } else {
+      ctx.fillText('With α₁ = ' + alpha1.toFixed(2) + ', the denominator is near zero → dividing amplifies ANY numerator noise or bias by 1/' + alpha1.toFixed(2) + ' = ' + (1/alpha1).toFixed(0) + '×', CW / 2, insightY + 14);
+      ctx.fillStyle = '#9ca3af'; ctx.font = '10px Inter, system-ui, sans-serif';
+      ctx.fillText('Rule of thumb: F-statistic for first stage should be > 10. Weak instruments are worse than no instrument at all.', CW / 2, insightY + 28);
+    }
+
+    // Narration
+    if (alpha1 < 0.10 && gamma < 0.01) {
+      narr.innerHTML = '<strong style="color:#ef4444;">Weak instrument.</strong> α₁ = ' + alpha1.toFixed(2) + ' means Z barely moves X. The Wald denominator is near zero, making the ratio explosive. Even though the exclusion restriction holds (γ = 0), the estimate is unreliable — the sampling variance of δ̂ᵢᵥ scales as 1/α₁², so you need massive data to compensate for a weak first stage.';
+    } else if (alpha1 < 0.10 && gamma > 0.01) {
+      narr.innerHTML = '<strong style="color:#ef4444;">Worst case: weak + contaminated.</strong> The bias γ/α₁ = ' + gamma.toFixed(2) + '/' + alpha1.toFixed(2) + ' = ' + (gamma/alpha1).toFixed(2) + ' is <em>larger</em> than the confounding bias in naive OLS (0.30). You\'re better off with OLS. This is the paradox: an IV that "mostly works" can be worse than doing nothing when the first stage is weak.';
+    } else if (gamma < 0.01) {
+      narr.innerHTML = '<strong style="color:#22c55e;">Valid IV.</strong> The reduced form = α₁·δ = ' + (alpha1*trueEffect).toFixed(2) + ' — this is NOT zero, because Z affects Y through X. The exclusion restriction means γ = 0 (no direct Z→Y), so the numerator is <em>purely</em> the indirect effect. Dividing by the first stage α₁ = ' + alpha1.toFixed(2) + ' recovers δ = ' + trueEffect.toFixed(2) + ' exactly. Compare: naive OLS gives ' + naiveEst.toFixed(2) + ' (biased by ' + confoundBias.toFixed(2) + ' from the U→X, U→Y confounding).';
+    } else {
+      var ivBiasVal = (gamma/alpha1);
+      narr.innerHTML = '<strong style="color:#f59e0b;">Contaminated instrument.</strong> The numerator is α₁·δ + γ = ' + (alpha1*trueEffect).toFixed(2) + ' + ' + gamma.toFixed(2) + ' = ' + reducedForm.toFixed(3) + '. The green bar is the causal signal; the orange bar is contamination. Dividing by α₁: δ + γ/α₁ = ' + trueEffect.toFixed(2) + ' + ' + ivBiasVal.toFixed(3) + ' = ' + ivEst.toFixed(3) + '. ' + (ivBiasVal < confoundBias ? 'The IV bias (' + ivBiasVal.toFixed(3) + ') is still less than OLS bias (' + confoundBias.toFixed(2) + ') — IV is better, just not perfect.' : '<strong>The IV bias (' + ivBiasVal.toFixed(3) + ') exceeds OLS bias (' + confoundBias.toFixed(2) + ')!</strong> The contaminated IV is doing more harm than good.');
     }
   }
 
