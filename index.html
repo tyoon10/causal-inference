@@ -163,6 +163,7 @@ body {
   font-size: 0.88rem;
   color: var(--text);
   line-height: 1.7;
+  overflow-x: auto;
 }
 
 .concept-card.open .concept-body { display: block; }
@@ -1540,6 +1541,17 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
           <li><strong>Indirect effect:</strong> $\beta_M \cdot \alpha$ (treatment $\to$ mediator $\to$ outcome)</li>
         </ul>
         <p style="margin-top:8px"><strong>Neural decomposition:</strong> Uses neural networks to model non-linear mechanisms. Allows latent mediators and complex interactions. Identifies structural components without imposing linearity.</p>
+
+        <h4 style="color:var(--accent);margin:14px 0 6px;">M (Mediator) vs Z (Instrument) &mdash; Mirror Images</h4>
+        <table class="comparison-table" style="margin:8px 0;font-size:0.84rem;">
+          <tr><th></th><th>Instrument $Z$</th><th>Mediator $M$</th></tr>
+          <tr><td><strong>Graph</strong></td><td>$Z \to X \to Y$</td><td>$X \to M \to Y$</td></tr>
+          <tr><td><strong>Position</strong></td><td><em>Upstream</em> of treatment</td><td><em>Downstream</em> of treatment</td></tr>
+          <tr><td><strong>Goal</strong></td><td>Estimate the <em>total</em> effect of $X$ on $Y$</td><td><em>Decompose</em> the total effect into direct vs. indirect</td></tr>
+          <tr><td><strong>Why needed</strong></td><td>Back-door fails (unobserved $U$)</td><td>Back-door works, but we want <em>how</em> the effect operates</td></tr>
+          <tr><td><strong>Key danger</strong></td><td>Conditioning on $Z$? No &mdash; $Z$ is exogenous</td><td>Conditioning on $M$ opens collider bias if $M$ has other causes</td></tr>
+        </table>
+        <p style="font-size:0.85rem;color:var(--text-dim);">The graphs are structurally similar ($A \to B \to C$) but the <strong>question</strong> is different. IV asks "what is the total $X \to Y$ effect?" Decomposition asks "how much of $X \to Y$ goes through $M$?"</p>
       </div>
     </div>
     <div class="concept-card" onclick="toggleCard(this)">
@@ -1547,12 +1559,12 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
       <div class="concept-body">
         <p>When subjects don't comply with their assignment:</p>
         <table class="comparison-table" style="margin:8px 0;font-size:0.84rem;">
-          <tr><th>Analysis</th><th>Compares</th><th>Estimates</th><th>Bias</th></tr>
-          <tr><td><strong>Intent-to-Treat (ITT)</strong></td><td>Groups as assigned</td><td>Effect of <em>assignment</em></td><td>Unbiased</td></tr>
-          <tr><td>Per-Protocol</td><td>Groups by compliance</td><td>Effect of <em>treatment</em></td><td>Potentially biased</td></tr>
-          <tr><td>IV / LATE</td><td>Complier-weighted</td><td>Effect for compliers</td><td>Unbiased (if valid)</td></tr>
+          <tr><th>Analysis</th><th>What it compares</th><th>What it estimates</th></tr>
+          <tr><td><strong>Intent-to-Treat (ITT)</strong></td><td>Groups as <em>assigned</em></td><td>Effect of <strong>assignment</strong> &mdash; always unbiased</td></tr>
+          <tr><td><strong>Per-Protocol</strong></td><td>Groups by actual <em>compliance</em></td><td>Effect of <strong>treatment</strong> &mdash; potentially biased (compliers ≠ non-compliers)</td></tr>
+          <tr><td><strong>IV / LATE</strong></td><td>Assignment as instrument for treatment</td><td>Effect for <strong>compliers</strong> &mdash; unbiased if monotonicity holds</td></tr>
         </table>
-        <p style="margin-top:8px">ITT is the "safe" analysis. If you want the treatment effect (not just the assignment effect), use IV with assignment as the instrument for actual treatment.</p>
+        <p style="margin-top:8px"><strong>Connection to L7:</strong> The assignment $Z$ is a natural instrument for actual treatment $X$. The Wald estimator (ITT effect ÷ compliance rate) = LATE for compliers. ITT is the safe analysis; IV/LATE recovers the per-unit treatment effect without the selection bias of per-protocol analysis.</p>
       </div>
     </div>
   </div>
