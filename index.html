@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Causal Inference Mid-Term Study Module</title>
+<title>Causal Inference Study Module</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
@@ -372,6 +372,10 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
   <button class="tab" data-tab="l4">L4: Conditioning</button>
   <button class="tab" data-tab="l5">L5: Weighting & ML</button>
   <button class="tab" data-tab="l6">L6: Practical</button>
+  <button class="tab" data-tab="l7">L7: Instruments</button>
+  <button class="tab" data-tab="l8">L8: Experiments</button>
+  <button class="tab" data-tab="l9">L9: Discontinuity</button>
+  <button class="tab" data-tab="l10">L10: Panel & TS</button>
   <button class="tab" data-tab="methods">Method Matrix</button>
   <button class="tab" data-tab="practice">Practice</button>
 </div>
@@ -405,6 +409,10 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
     <div class="flow-step">
       <div class="step-num">5</div>
       <div class="step-content"><strong>Validate and assess</strong> &mdash; Support check, balance assessment, sensitivity analysis</div>
+    </div>
+    <div class="flow-step">
+      <div class="step-num">6</div>
+      <div class="step-content"><strong>Handle harder settings</strong> &mdash; IV (unobserved confounders), RD (natural cutoffs), DID &amp; ITS (time), panel methods (MC-NNM)</div>
     </div>
   </div>
 
@@ -1378,6 +1386,486 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
     <div style="padding:10px 14px;border-radius:8px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);font-size:0.88rem;">
       <strong style="color:rgba(245,158,11,0.9);">Sensitivity Analysis</strong> &mdash; Stress-test: how strong must a hidden confounder be to kill the effect?
     </div>
+  </div>
+</div>
+
+<!-- ==================== LECTURE 7: INSTRUMENTAL VARIABLES ==================== -->
+<div class="tab-panel" id="panel-l7">
+  <h2 class="section-title">L7: Instrumental Variables</h2>
+
+  <div class="card">
+    <p>When the back-door criterion <strong>fails</strong> &mdash; because you have an unobserved confounder $U$ between treatment $X$ and outcome $Y$ &mdash; you can sometimes exploit an <strong>instrumental variable</strong> $Z$ that affects $Y$ <em>only through</em> $X$.</p>
+  </div>
+
+  <div class="concept-grid">
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">The IV Setup <span class="badge badge-core">Core</span></div>
+      <div class="concept-body">
+        <p>The graph: $Z \to X \to Y$ with a hidden confounder $U \to X$, $U \to Y$.</p>
+        <p>We <strong>cannot</strong> adjust for $U$ because it is unobserved. But $Z$ provides a "natural experiment" &mdash; variation in $X$ that is <em>exogenous</em> (not driven by $U$).</p>
+        <div class="formula-box">
+          <strong>Classic example:</strong> Quarter of birth $(Z)$ &rarr; Years of education $(X)$ &rarr; Earnings $(Y)$<br>
+          Hidden confounder $U$ = ability, motivation
+        </div>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Three IV Conditions <span class="badge badge-exam">Exam</span></div>
+      <div class="concept-body">
+        <ol>
+          <li><strong>Relevance:</strong> $Z$ must affect $X$. $\text{Cov}(Z, X) \neq 0$. <em>Testable from data.</em></li>
+          <li><strong>Exclusion restriction:</strong> $Z$ affects $Y$ <em>only through</em> $X$. No direct $Z \to Y$ edge. <em>Not testable &mdash; domain knowledge only.</em></li>
+          <li><strong>Independence:</strong> $Z \perp U$. The instrument is not confounded with the outcome. <em>Not testable.</em></li>
+        </ol>
+        <p style="margin-top:8px;color:var(--text-dim);">Two of three conditions are <strong>untestable</strong>. IV validity ultimately rests on domain knowledge and argumentation, not on statistical tests.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Wald Estimator <span class="badge badge-method">Method</span></div>
+      <div class="concept-body">
+        <p>When $Z$ is binary (0/1):</p>
+        <div class="formula-box">
+          $\hat{\delta}_{IV} = \frac{E[Y \mid Z=1] - E[Y \mid Z=0]}{E[X \mid Z=1] - E[X \mid Z=0]}$
+        </div>
+        <p><strong>Intuition:</strong> The numerator is the <em>reduced-form</em> effect of $Z$ on $Y$. The denominator is the <em>first-stage</em> effect of $Z$ on $X$. Dividing isolates the part of the $Y$ change that flows through $X$.</p>
+        <p style="margin-top:8px;color:var(--text-dim);">If the denominator is small (weak instrument), the estimate becomes unstable &mdash; the <strong>weak instrument problem</strong>.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Two-Stage Least Squares (2SLS) <span class="badge badge-method">Method</span></div>
+      <div class="concept-body">
+        <p>Generalization of Wald to continuous/multi-valued instruments:</p>
+        <div class="formula-box">
+          <strong>Stage 1:</strong> Regress $X$ on $Z$: $\hat{X} = \hat{\alpha}_0 + \hat{\alpha}_1 Z$<br>
+          <strong>Stage 2:</strong> Regress $Y$ on $\hat{X}$: $Y = \beta_0 + \beta_1 \hat{X} + \epsilon$
+        </div>
+        <p>$\hat{X}$ is the <strong>exogenous part</strong> of $X$ &mdash; the variation predicted by the instrument, purged of confounding. The Stage 2 coefficient $\beta_1$ is the causal effect.</p>
+        <p style="margin-top:8px"><strong>Why two stages?</strong> Direct regression of $Y$ on $X$ is biased by $U$. By using only the $Z$-predicted part of $X$, we break the $U \to X$ path.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">LATE: Local Average Treatment Effect <span class="badge badge-warning">Warning</span></div>
+      <div class="concept-body">
+        <p>With heterogeneous effects and imperfect compliance, IV estimates the <strong>LATE</strong> &mdash; the causal effect for <em>compliers</em> only:</p>
+        <div class="formula-box">$\text{LATE} = E[\delta_i \mid \text{complier}]$</div>
+        <p><strong>Four subgroups</strong> defined by how units respond to the instrument:</p>
+        <table class="comparison-table" style="margin:8px 0;font-size:0.84rem;">
+          <tr><th>Type</th><th>$Z=0$</th><th>$Z=1$</th><th>Response</th></tr>
+          <tr><td><strong>Compliers</strong></td><td>$X=0$</td><td>$X=1$</td><td>Follow the instrument</td></tr>
+          <tr><td>Always-takers</td><td>$X=1$</td><td>$X=1$</td><td>Always treated</td></tr>
+          <tr><td>Never-takers</td><td>$X=0$</td><td>$X=0$</td><td>Never treated</td></tr>
+          <tr><td>Defiers</td><td>$X=1$</td><td>$X=0$</td><td>Do the opposite</td></tr>
+        </table>
+        <p style="margin-top:8px"><strong>Monotonicity assumption:</strong> No defiers exist. Required for LATE to be well-defined. Always-takers and never-takers contribute nothing &mdash; the IV effect is entirely driven by compliers.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Contaminated Instruments <span class="badge badge-warning">Warning</span></div>
+      <div class="concept-body">
+        <p>What if the exclusion restriction is <em>slightly</em> violated? A small direct $Z \to Y$ effect biases the IV estimate:</p>
+        <div class="formula-box">$\hat{\delta}_{IV} = \delta + \frac{\gamma}{\text{Cov}(Z,X)}$</div>
+        <p>where $\gamma$ is the direct effect of $Z$ on $Y$. With a <strong>weak instrument</strong> (small denominator), even a tiny $\gamma$ causes large bias. Contaminated IV can be <em>more</em> biased than naive OLS.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive IV Visualization -->
+  <h2 class="section-title">Interactive: The IV Logic</h2>
+  <div class="card" style="padding:24px;">
+    <p style="font-size:0.9rem;margin-bottom:14px;">Drag the instrument strength slider to see how IV estimation works. Watch the two stages and how weak instruments amplify noise.</p>
+    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:14px;">
+      <label style="font-size:0.88rem;display:flex;align-items:center;gap:8px;">
+        First-stage strength ($\alpha_1$):
+        <input type="range" id="ivStrengthSlider" min="0.05" max="1.0" step="0.01" value="0.60" style="width:200px;">
+        <span id="ivStrengthLabel" style="font-family:monospace;min-width:40px;">0.60</span>
+      </label>
+      <label style="font-size:0.88rem;display:flex;align-items:center;gap:8px;">
+        Exclusion violation ($\gamma$):
+        <input type="range" id="ivGammaSlider" min="0" max="0.5" step="0.01" value="0" style="width:200px;">
+        <span id="ivGammaLabel" style="font-family:monospace;min-width:40px;">0.00</span>
+      </label>
+    </div>
+    <canvas id="ivCanvas" width="750" height="380" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
+    <div id="ivNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+  </div>
+</div>
+
+<!-- ==================== LECTURE 8: EXPERIMENTS ==================== -->
+<div class="tab-panel" id="panel-l8">
+  <h2 class="section-title">L8: Experiments & Decomposition</h2>
+
+  <div class="card">
+    <p>Randomized experiments are the gold standard for causal inference. When you <strong>control assignment</strong>, confounding disappears by design. But real experiments introduce complications: non-compliance, time-varying effects, and the challenge of decomposing <em>how</em> a treatment works.</p>
+  </div>
+
+  <div class="concept-grid">
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Why Experiments Work <span class="badge badge-core">Core</span></div>
+      <div class="concept-body">
+        <p>Random assignment ensures $D \perp (Y^{(D=0)}, Y^{(D=1)})$:</p>
+        <div class="formula-box">$E[Y \mid D=1] - E[Y \mid D=0] = \text{ATE}$</div>
+        <p>The naive estimator <strong>is</strong> the causal effect. No adjustment needed. No unobserved confounders to worry about &mdash; because the graph has no edges into $D$ except from the randomization mechanism you control.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">A/B Testing Framework <span class="badge badge-core">Core</span></div>
+      <div class="concept-body">
+        <p>Apply treatment at time $t$ to a test group ($D_{it}=1$) and not to control ($D_{it}=0$). Treatment stays on; control stays off.</p>
+        <p>Define $D_i^* = 1$ if ever treated, 0 otherwise. The effect of $D_i^*$ on aggregate outcome $Y$ is identified by the experiment.</p>
+        <p style="margin-top:8px"><strong>But:</strong> The effect of being treated at a <em>specific time</em> $D_{it}$ is harder &mdash; because outcomes carry forward (cumulative effects).</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Time-Varying Treatment Effects <span class="badge badge-warning">Warning</span></div>
+      <div class="concept-body">
+        <p>$\delta_t$ can change over time in several important ways:</p>
+        <ul>
+          <li><strong>Novelty effects:</strong> Users explore a new feature more at first, engagement decays to steady-state</li>
+          <li><strong>Hawthorne effect:</strong> Behavior changes because subjects know they're being observed (factory lighting study)</li>
+          <li><strong>Cold start:</strong> Recommendation systems need data to work well &mdash; early performance understates long-run effect</li>
+        </ul>
+        <p style="margin-top:8px">To detect these, measure the effect at each time point $t$ separately. Look for stabilization. Due to smaller per-period samples, error analysis is especially important.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Effect Decomposition <span class="badge badge-method">Method</span></div>
+      <div class="concept-body">
+        <p>Once we know the ATE, we may want to understand <strong>how</strong> the treatment works &mdash; through which mechanisms.</p>
+        <div class="formula-box">$Y = f(X, M_1, M_2, \ldots) + \epsilon$</div>
+        <p><strong>Linear decomposition:</strong> If $Y = \beta_X X + \beta_{M} M + \epsilon$ and $M = \alpha X + \eta$, the total effect decomposes into:</p>
+        <ul>
+          <li><strong>Direct effect:</strong> $\beta_X$ (treatment $\to$ outcome, not through mediators)</li>
+          <li><strong>Indirect effect:</strong> $\beta_M \cdot \alpha$ (treatment $\to$ mediator $\to$ outcome)</li>
+        </ul>
+        <p style="margin-top:8px"><strong>Neural decomposition:</strong> Uses neural networks to model non-linear mechanisms. Allows latent mediators and complex interactions. Identifies structural components without imposing linearity.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Intent-to-Treat vs Per-Protocol <span class="badge badge-exam">Exam</span></div>
+      <div class="concept-body">
+        <p>When subjects don't comply with their assignment:</p>
+        <table class="comparison-table" style="margin:8px 0;font-size:0.84rem;">
+          <tr><th>Analysis</th><th>Compares</th><th>Estimates</th><th>Bias</th></tr>
+          <tr><td><strong>Intent-to-Treat (ITT)</strong></td><td>Groups as assigned</td><td>Effect of <em>assignment</em></td><td>Unbiased</td></tr>
+          <tr><td>Per-Protocol</td><td>Groups by compliance</td><td>Effect of <em>treatment</em></td><td>Potentially biased</td></tr>
+          <tr><td>IV / LATE</td><td>Complier-weighted</td><td>Effect for compliers</td><td>Unbiased (if valid)</td></tr>
+        </table>
+        <p style="margin-top:8px">ITT is the "safe" analysis. If you want the treatment effect (not just the assignment effect), use IV with assignment as the instrument for actual treatment.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive: A/B Test Time-Varying Effects -->
+  <h2 class="section-title">Interactive: A/B Test with Time-Varying Effects</h2>
+  <div class="card" style="padding:24px;">
+    <p style="font-size:0.9rem;margin-bottom:14px;">See how novelty effects, cold start, and Hawthorne effects distort A/B test results over time. Toggle each phenomenon on/off.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+      <button class="ab-btn ab-active" onclick="abToggle('novelty',this)" id="abNoveltyBtn" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:600;">Novelty Effect</button>
+      <button class="ab-btn" onclick="abToggle('coldstart',this)" id="abColdBtn" style="padding:8px 18px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">Cold Start</button>
+      <button class="ab-btn" onclick="abToggle('hawthorne',this)" id="abHawBtn" style="padding:8px 18px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">Hawthorne Effect</button>
+      <button class="ab-btn" onclick="abToggle('none',this)" id="abNoneBtn" style="padding:8px 18px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">True Effect Only</button>
+    </div>
+    <canvas id="abCanvas" width="750" height="340" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
+    <div id="abNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+  </div>
+</div>
+
+<!-- ==================== LECTURE 9: DISCONTINUITY & TIME SERIES ==================== -->
+<div class="tab-panel" id="panel-l9">
+  <h2 class="section-title">L9: Discontinuity Designs & Time Series</h2>
+
+  <div class="card">
+    <p>When experiments aren't possible and instruments aren't available, we can exploit <strong>natural cutoffs</strong> (regression discontinuity) or <strong>temporal structure</strong> (ITS, DID) to identify causal effects. These methods trade generality for credibility &mdash; they estimate <em>local</em> effects near specific boundaries or time points.</p>
+  </div>
+
+  <h2 class="section-title">Regression Discontinuity</h2>
+  <div class="concept-grid">
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Sharp RD Design <span class="badge badge-method">Method</span></div>
+      <div class="concept-body">
+        <p>Treatment is <strong>completely determined</strong> by a running variable $Z$ crossing a cutoff $z_0$:</p>
+        <div class="formula-box">$D_i = \mathbf{1}[Z_i \geq z_0]$</div>
+        <p>Units just above $z_0$ are nearly identical to units just below &mdash; like a local experiment.</p>
+        <div class="formula-box">$\text{ATE}_{RD} = \lim_{z \downarrow z_0} E[Y \mid Z=z] - \lim_{z \uparrow z_0} E[Y \mid Z=z]$</div>
+        <p><strong>Example:</strong> Scholarship eligibility at GPA = 3.0. Compare students at 3.01 vs 2.99.</p>
+        <p style="margin-top:8px;color:var(--text-dim);">The effect is <strong>local</strong>: it applies only at the cutoff, not to the full population.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Fuzzy RD Design <span class="badge badge-method">Method</span></div>
+      <div class="concept-body">
+        <p>The cutoff <strong>increases the probability</strong> of treatment but doesn't determine it completely:</p>
+        <div class="formula-box">$P(D=1 \mid Z) \text{ jumps at } z_0 \text{ but not from 0 to 1}$</div>
+        <p>This is exactly an <strong>IV problem at the discontinuity</strong>. The cutoff indicator is the instrument:</p>
+        <div class="formula-box">$\hat{\delta}_{FRD} = \frac{\lim_{z \downarrow z_0} E[Y|Z=z] - \lim_{z \uparrow z_0} E[Y|Z=z]}{\lim_{z \downarrow z_0} E[D|Z=z] - \lim_{z \uparrow z_0} E[D|Z=z]}$</div>
+        <p>The numerator is the jump in outcomes; the denominator is the jump in treatment take-up. This is the <strong>Wald estimator at the cutoff</strong>.</p>
+        <p style="margin-top:8px"><strong>Interpretation:</strong> LATE for compliers at the cutoff &mdash; units who are treated <em>because</em> of the cutoff.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">RD Threats: Manipulation & Pileup <span class="badge badge-warning">Warning</span></div>
+      <div class="concept-body">
+        <p>If units can <strong>manipulate</strong> the running variable to cross the cutoff, the "as-if random" logic breaks:</p>
+        <ul>
+          <li>Students retaking exams to cross the GPA threshold</li>
+          <li>Firms manipulating revenue to cross regulatory cutoffs</li>
+        </ul>
+        <p style="margin-top:8px"><strong>Diagnostic:</strong> Check for <em>bunching</em> (pileup) in the density of $Z$ at $z_0$. A smooth density supports the design; a spike suggests manipulation.</p>
+        <p><strong>McCrary test:</strong> Formal test for discontinuity in the running variable's density.</p>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">Time Series Designs</h2>
+  <div class="concept-grid">
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Panel Data Framework <span class="badge badge-core">Core</span></div>
+      <div class="concept-body">
+        <p>Generalize from cross-section to $N$ units observed over $T$ time periods:</p>
+        <div class="formula-box">
+          Treatment: $D_{it}$ &nbsp; Outcome: $Y_{it}$ &nbsp; Potential outcomes: $Y_{it}^{(D=d)}$<br>
+          Individual effect: $\delta_{it} = Y_{it}^{(D=1)} - Y_{it}^{(D=0)}$
+        </div>
+        <p><strong>Data types by structure:</strong></p>
+        <table class="comparison-table" style="margin:8px 0;font-size:0.84rem;">
+          <tr><th>Type</th><th>Units</th><th>Time</th><th>Structure</th></tr>
+          <tr><td>Cross-sectional</td><td>$N$ fixed</td><td>$t=1$</td><td>One snapshot</td></tr>
+          <tr><td>Time series</td><td>$N=1$</td><td>$T$ periods</td><td>One unit over time</td></tr>
+          <tr><td>Panel</td><td>$N$ fixed</td><td>$T$ discrete</td><td>Dense matrix $N \times T$</td></tr>
+          <tr><td>Pooled cross-section</td><td>Varying</td><td>$T$ periods</td><td>Different units each period</td></tr>
+          <tr><td>Rolling cross-section</td><td>Varying</td><td>Continuous</td><td>Units measured at arbitrary times</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Interrupted Time Series (ITS) <span class="badge badge-method">Method</span></div>
+      <div class="concept-body">
+        <p>A single unit, measured over time. Treatment turns on at $t^*$. Estimate $\delta_{it}$ by <strong>extrapolating the pre-treatment trend</strong> into the post-treatment period:</p>
+        <div class="formula-box">$\hat{\delta}_{it} = Y_{it}^{(D=1)} - \hat{Y}_{it}^{(D=0)}$</div>
+        <p>The counterfactual $\hat{Y}^{(D=0)}$ is what <em>would have happened</em> without treatment, estimated from pre-treatment data.</p>
+        <p style="margin-top:8px"><strong>Key assumption:</strong> The pre-treatment trend would have continued. This can fail due to:</p>
+        <ul>
+          <li><strong>Anticipation:</strong> Unit changes behavior before treatment (e.g., switch products before a feature is removed)</li>
+          <li><strong>Simultaneous changes:</strong> Other events happen at $t^*$ (e.g., policy bundled with others)</li>
+          <li><strong>Confounding:</strong> Outside factors drive both the treatment timing and the outcome</li>
+        </ul>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">ITS Robustness Checks <span class="badge badge-exam">Exam</span></div>
+      <div class="concept-body">
+        <p>Strategies to build confidence that the ITS effect is real:</p>
+        <ol>
+          <li><strong>Examine other outcomes that should be affected</strong> &mdash; if marketing drives visits, do sign-ups also increase?</li>
+          <li><strong>Examine outcomes that should NOT be affected</strong> &mdash; if only new visits change, baseline user behavior should be stable</li>
+          <li><strong>Assess subgroup effects</strong> &mdash; do effects vary predictably? (e.g., targeted users respond more)</li>
+          <li><strong>Adjust for concurrent trends</strong> &mdash; control for other variables that changed around $t^*$</li>
+          <li><strong>Compare with other units</strong> &mdash; similar websites/products that didn't receive treatment</li>
+          <li><strong>Is removing the cause impactful?</strong> &mdash; when the campaign ends, does the effect go away?</li>
+        </ol>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Difference-in-Differences (DID) <span class="badge badge-method">Method</span></div>
+      <div class="concept-body">
+        <p>Multiple units, some treated at $t^*$, some not. The DID regression:</p>
+        <div class="formula-box">$E[Y_{it} \mid D^*=d, T=t] = \beta_0 + \beta_t \cdot t + \beta_D \cdot d + \beta_{DT} \cdot td$</div>
+        <p>The causal effect is <strong>$\delta = \beta_{DT}$</strong> &mdash; the interaction term.</p>
+        <p style="margin-top:8px"><strong>DID formula:</strong></p>
+        <div class="formula-box">
+          $\hat{\delta}_{DID} = \big(E[Y|D^*\!=\!1,t\!=\!1] - E[Y|D^*\!=\!1,t\!=\!0]\big) - \big(E[Y|D^*\!=\!0,t\!=\!1] - E[Y|D^*\!=\!0,t\!=\!0]\big)$
+        </div>
+        <p><strong>What DID removes:</strong> Constant confounders $U$ (they cancel in the first difference). $\beta_D$ captures baseline group differences; $\beta_t$ captures time trends; $\beta_{DT}$ is what's left = the treatment effect.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">DID: Parallel Trends Assumption <span class="badge badge-warning">Warning</span></div>
+      <div class="concept-body">
+        <p>DID assumes the <strong>change</strong> in the confounder is the same for treatment and control groups.</p>
+        <div class="formula-box">$E[U_{i1} - U_{i0} \mid D^*=1] = E[U_{i1} - U_{i0} \mid D^*=0]$</div>
+        <p>If this fails &mdash; e.g., the treatment group was already trending differently &mdash; DID is biased.</p>
+        <p style="margin-top:8px"><strong>Time-varying confounders:</strong> If $U_{it}$ changes differently across groups, the DID estimator includes bias: $\gamma \big(E[\Delta X_i | D^*\!=\!1] - E[\Delta X_i | D^*\!=\!0]\big)$</p>
+        <p><strong>Fix:</strong> Add time-varying covariates $X_{it}$ to the regression: $E[Y_{it}|D^*\!=\!d, T\!=\!t, X_{it}] = \beta_0 + \beta_t t + \beta_D d + \beta_{DT} td + \gamma X_{it}$</p>
+        <p style="color:var(--text-dim);">Valid as long as $X_{it}$ is not itself affected by the treatment (not a post-treatment variable).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive: Sharp RD Visualization -->
+  <h2 class="section-title">Interactive: Regression Discontinuity</h2>
+  <div class="card" style="padding:24px;">
+    <p style="font-size:0.9rem;margin-bottom:14px;">See the sharp RD design in action. Adjust the bandwidth to see how the local estimate changes near the cutoff.</p>
+    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:14px;">
+      <label style="font-size:0.88rem;display:flex;align-items:center;gap:8px;">
+        Bandwidth:
+        <input type="range" id="rdBandwidthSlider" min="0.1" max="1.0" step="0.05" value="0.40" style="width:200px;">
+        <span id="rdBandwidthLabel" style="font-family:monospace;min-width:40px;">0.40</span>
+      </label>
+    </div>
+    <canvas id="rdCanvas" width="750" height="380" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
+    <div id="rdNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+  </div>
+
+  <!-- Interactive: DID Visualization -->
+  <h2 class="section-title">Interactive: Difference-in-Differences</h2>
+  <div class="card" style="padding:24px;">
+    <p style="font-size:0.9rem;margin-bottom:14px;">See how DID isolates the treatment effect by differencing away both group differences and time trends. Toggle violations to see how bias enters.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+      <button class="did-btn did-active" onclick="didToggle('clean',this)" id="didCleanBtn" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:600;">Clean DID</button>
+      <button class="did-btn" onclick="didToggle('nonparallel',this)" id="didNPBtn" style="padding:8px 18px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">Non-Parallel Trends</button>
+      <button class="did-btn" onclick="didToggle('timevarying',this)" id="didTVBtn" style="padding:8px 18px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">Time-Varying Confounder</button>
+    </div>
+    <canvas id="didCanvas" width="750" height="340" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
+    <div id="didNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+  </div>
+</div>
+
+<!-- ==================== LECTURE 10: PANEL & TIME SERIES ==================== -->
+<div class="tab-panel" id="panel-l10">
+  <h2 class="section-title">L10: Time Series & Panel Designs</h2>
+
+  <div class="card">
+    <p>When we move from cross-sectional data to time series and panels, new phenomena arise: <strong>dependence over time</strong>, <strong>regime shifts</strong>, and <strong>latent factors</strong>. The fundamental problem evolves &mdash; now we need to account for <em>when</em> treatment happens, not just <em>whether</em> it happens.</p>
+  </div>
+
+  <h2 class="section-title">Time-Series Causal Graphs</h2>
+  <div class="concept-grid">
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Time Dependence & Stationarity <span class="badge badge-core">Core</span></div>
+      <div class="concept-body">
+        <p>In time series, each variable at time $t$ is a <strong>separate node</strong> in the causal graph. Dependence over time creates edges like $S_{t-1}^a \to S_t^a$ (autocorrelation).</p>
+        <p style="margin-top:8px"><strong>Stationarity assumption:</strong> The structural function is the same at every time step: $S_t = f(S_{t-1})$ rather than $S_t = f_t(S_{t-1})$.</p>
+        <p>This is the time-series analog of i.i.d. &mdash; it lets us pool data across time to estimate a single causal function.</p>
+        <p style="margin-top:8px"><strong>Markov assumptions</strong> simplify the graph: dependence only goes back $k$ steps, like an ARMA model: $Y_t = \beta_1 Y_{t-1} + \beta_2 Y_{t-2} + \beta_3 Y_{t-3} + \epsilon_t$.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Back-Door in Time Series <span class="badge badge-core">Core</span></div>
+      <div class="concept-body">
+        <p>The graph: $X_t \to S_t \leftarrow S_{t-1} \to X_t$ (and more complex interconnections with $U_t$).</p>
+        <p>Past values of outcomes ($S_{t-1}$) lie along back-door paths. Past causal states ($X_{t-1}$) can confound future outcomes.</p>
+        <p style="margin-top:8px"><strong>Good news:</strong> Under stationarity, the back-door adjustment set is the same at every $t$: $Z = \{S_{t-1}^a, U_t\}$. We can apply the familiar back-door criterion &mdash; we just need to include lagged variables.</p>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">Causal Forecasting</h2>
+  <div class="concept-grid">
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Statistical vs Causal Forecasting <span class="badge badge-exam">Exam</span></div>
+      <div class="concept-body">
+        <p>Pure prediction: estimate $P(Y_{t+1} | X_t)$ by fitting $\hat{Y}_{t+1} = \hat{\beta} X_t$.</p>
+        <p>With a confounder $U_{t-1}$:</p>
+        <div class="formula-box">
+          $X_t = \beta U_{t-1} + \epsilon_{X,t}$<br>
+          $Y_{t+1} = \beta_X X_t + \beta_U U_{t-1} + \epsilon_{Y,t+1}$
+        </div>
+        <p>The naive OLS slope has <strong>omitted variable bias</strong>:</p>
+        <div class="formula-box">$\hat{\beta} = \beta_X + \beta_U \cdot \frac{\beta \sigma_U^2}{\beta^2 \sigma_U^2 + \sigma_{\epsilon_X}^2}$</div>
+        <p>The bias depends on $\sigma_{\epsilon_X}^2$ &mdash; the exogenous variance of $X$.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Regime Shifts Break Statistical Models <span class="badge badge-warning">Warning</span></div>
+      <div class="concept-body">
+        <p>If the exogenous noise $\sigma_{\epsilon_X}^2$ changes at time $t^*$ (a <strong>regime shift</strong>):</p>
+        <ul>
+          <li>The causal mechanism ($\beta_X$, $\beta_U$, $\beta$) is <strong>unchanged</strong></li>
+          <li>But the OLS bias term changes because it depends on $\sigma_{\epsilon_X}^2$</li>
+          <li>A model fit on pre-$t^*$ data gives <strong>wrong predictions</strong> after $t^*$</li>
+        </ul>
+        <div class="highlight-box" style="margin-top:12px;">
+          <strong>Key insight:</strong> Causal models are <strong>robust to regime shifts</strong> because structural equations ($Y = \beta_X X + \beta_U U + \epsilon$) are invariant to changes in exogenous noise distributions. The naive statistical model must be re-fit after every regime shift &mdash; and you won't have data from the new regime to fit it!
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">Matrix Completion (MC-NNM)</h2>
+  <div class="concept-grid">
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">The Missing Data Insight <span class="badge badge-core">Core</span></div>
+      <div class="concept-body">
+        <p>In panel data with treatment switching on/off, we observe two incomplete matrices:</p>
+        <div class="formula-box">
+          $Y_{it}^{(D=0)}$: observed when $D_{it}=0$, missing when $D_{it}=1$<br>
+          $Y_{it}^{(D=1)}$: observed when $D_{it}=1$, missing when $D_{it}=0$
+        </div>
+        <p>They are <strong>exactly complementary</strong>: every cell is observed in one matrix and missing in the other.</p>
+        <p style="margin-top:8px"><strong>Causal inference = matrix completion:</strong> Fill in the missing entries to construct counterfactuals.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">MC-NNM Framework <span class="badge badge-method">Method</span></div>
+      <div class="concept-body">
+        <p>Assume the outcome matrix is <strong>low-rank</strong> (driven by a few latent factors). Recover it by nuclear norm minimization:</p>
+        <div class="formula-box">$\min_{Y^c} \frac{1}{|M|} \|M \circ (Y^{(D=d)} - Y^c)\|_F^2 + \lambda \|Y^c\|_*$</div>
+        <p>where $\|Y^c\|_*$ is the nuclear norm (sum of singular values) and $M$ is the observation mask.</p>
+        <p style="margin-top:8px"><strong>Key assumptions:</strong></p>
+        <ol>
+          <li><strong>Low-rank structure:</strong> Outcomes driven by a small number of latent factors</li>
+          <li><strong>Missing at random:</strong> Conditional on observed potential outcomes, missingness pattern is independent of unobserved potential outcomes</li>
+        </ol>
+        <p style="margin-top:8px"><strong>Solved via:</strong> Proximal gradient descent with singular value thresholding (SVT).</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Latent Factors & Selection Bias <span class="badge badge-core">Core</span></div>
+      <div class="concept-body">
+        <p>Latent factors $F_1, F_2, \ldots$ jointly determine both treatment assignment and outcomes. This creates selection bias.</p>
+        <p><strong>MC-NNM handles this</strong> by exploiting shared low-rank structure: if the same factors drive both treatment and outcomes, the matrix structure encodes the confounding &mdash; and completing the matrix implicitly adjusts for it.</p>
+        <p style="margin-top:8px"><strong>When does it work?</strong></p>
+        <ul>
+          <li>The latent factor must drive <em>many</em> observed variables &mdash; otherwise we can't infer it</li>
+          <li>Works naturally with <strong>constant confounders</strong> (factor varies across units but not time)</li>
+          <li>Flexible with <strong>staggered adoption</strong> &mdash; different units treated at different times</li>
+        </ul>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Treatment-Confounder Feedback <span class="badge badge-warning">Warning</span></div>
+      <div class="concept-body">
+        <p>In dynamic settings, past treatment $X_{i0}$ can influence a confounder $Z_{it}$, which then affects future treatment $X_{it}$ and outcome $Y_{it}$.</p>
+        <div class="formula-box">$X_{i0} \to Z_{it} \to X_{it} \to Y_{it}$ (with $U_{it} \to Z_{it}$)</div>
+        <p>This creates a <strong>feedback loop</strong> between treatment and confounders. Standard back-door adjustment fails because $Z_{it}$ is both a confounder (it affects $Y$) and a mediator (it's affected by past $X$).</p>
+        <p style="margin-top:8px"><strong>Solution:</strong> Sequential adjustment methods &mdash; adjust for $Z_{it}$ at each time step separately, being careful about conditioning on post-treatment variables.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">MC-NNM Advantages <span class="badge badge-method">Method</span></div>
+      <div class="concept-body">
+        <ul>
+          <li>Handles <strong>staggered adoption</strong> (different treatment times for different units)</li>
+          <li>Admits <strong>uncertainty quantification</strong> via bootstrapping or Bayesian extensions</li>
+          <li><strong>Combines regression across units and across time</strong> in a single framework</li>
+          <li>Can incorporate control variables into the loss function</li>
+          <li>Connects matrix completion (ML/RecSys) with causal inference (econometrics)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive: Matrix Completion Visualization -->
+  <h2 class="section-title">Interactive: Matrix Completion for Causal Inference</h2>
+  <div class="card" style="padding:24px;">
+    <p style="font-size:0.9rem;margin-bottom:14px;">See how the potential outcome matrices relate. Click cells to toggle treatment assignment and watch the missingness pattern update.</p>
+    <canvas id="mcCanvas" width="750" height="420" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
+    <div id="mcNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+  </div>
+
+  <!-- Interactive: Regime Shift Visualization -->
+  <h2 class="section-title">Interactive: Regime Shift — Statistical vs Causal Forecasting</h2>
+  <div class="card" style="padding:24px;">
+    <p style="font-size:0.9rem;margin-bottom:14px;">Compare how statistical (OLS) and causal models respond when the noise regime changes at $t^*$. Drag the noise slider to induce a regime shift.</p>
+    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:14px;">
+      <label style="font-size:0.88rem;display:flex;align-items:center;gap:8px;">
+        Post-shift $\sigma_{\epsilon_X}^2$:
+        <input type="range" id="regimeSlider" min="0.1" max="3.0" step="0.1" value="0.5" style="width:200px;">
+        <span id="regimeLabel" style="font-family:monospace;min-width:40px;">0.5</span>
+      </label>
+    </div>
+    <canvas id="regimeCanvas" width="750" height="360" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
+    <div id="regimeNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
   </div>
 </div>
 
@@ -4643,6 +5131,835 @@ document.addEventListener('keydown', (e) => {
   });
   obs.observe(document.getElementById('panel-l6'), { attributes: true, attributeFilter: ['class'] });
   setTimeout(function() { draw(0); updateNarr(0); }, 200);
+})();
+
+// ===== L7: Instrumental Variables Visualization =====
+(function() {
+  var CW = 750, CH = 380;
+  var canvas = document.getElementById('ivCanvas');
+  if (!canvas) return;
+  var strSlider = document.getElementById('ivStrengthSlider');
+  var strLabel = document.getElementById('ivStrengthLabel');
+  var gamSlider = document.getElementById('ivGammaSlider');
+  var gamLabel = document.getElementById('ivGammaLabel');
+  var narr = document.getElementById('ivNarration');
+
+  var trueEffect = 0.50;
+
+  function draw() {
+    var alpha1 = parseFloat(strSlider.value);
+    var gamma = parseFloat(gamSlider.value);
+    strLabel.textContent = alpha1.toFixed(2);
+    gamLabel.textContent = gamma.toFixed(2);
+
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = CW * dpr; canvas.height = CH * dpr;
+    canvas.style.width = CW + 'px'; canvas.style.height = CH + 'px';
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#12141f'; ctx.fillRect(0, 0, CW, CH);
+
+    // Draw DAG
+    var nodes = [
+      { label: 'Z', x: 100, y: 80, color: '#22c55e', desc: 'Instrument' },
+      { label: 'X', x: 280, y: 80, color: '#6c63ff', desc: 'Treatment' },
+      { label: 'Y', x: 460, y: 80, color: '#00d2ff', desc: 'Outcome' },
+      { label: 'U', x: 370, y: 200, color: '#ef4444', desc: 'Unobserved' }
+    ];
+
+    // Edges
+    function drawArrow(x1, y1, x2, y2, color, width, dashed) {
+      var angle = Math.atan2(y2 - y1, x2 - x1);
+      var r = 28;
+      var sx = x1 + r * Math.cos(angle), sy = y1 + r * Math.sin(angle);
+      var ex = x2 - r * Math.cos(angle), ey = y2 - r * Math.sin(angle);
+      ctx.strokeStyle = color; ctx.lineWidth = width;
+      if (dashed) ctx.setLineDash([6, 4]); else ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke();
+      ctx.setLineDash([]);
+      // arrowhead
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(ex, ey);
+      ctx.lineTo(ex - 10 * Math.cos(angle - 0.3), ey - 10 * Math.sin(angle - 0.3));
+      ctx.lineTo(ex - 10 * Math.cos(angle + 0.3), ey - 10 * Math.sin(angle + 0.3));
+      ctx.closePath(); ctx.fill();
+    }
+
+    drawArrow(100, 80, 280, 80, '#22c55e', alpha1 * 3 + 1, false); // Z -> X
+    drawArrow(280, 80, 460, 80, '#6c63ff', 2.5, false); // X -> Y
+    drawArrow(370, 200, 280, 80, '#ef4444', 2, true); // U -> X
+    drawArrow(370, 200, 460, 80, '#ef4444', 2, true); // U -> Y
+    if (gamma > 0.01) {
+      drawArrow(100, 80, 460, 80, 'rgba(245,158,11,0.8)', gamma * 4 + 1, false); // Z -> Y direct
+      ctx.fillStyle = 'rgba(245,158,11,0.8)'; ctx.font = 'bold 11px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('γ=' + gamma.toFixed(2), 280, 60);
+    }
+
+    // Edge labels
+    ctx.fillStyle = '#22c55e'; ctx.font = 'bold 11px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('α₁=' + alpha1.toFixed(2), 190, 70);
+    ctx.fillStyle = '#6c63ff';
+    ctx.fillText('δ=' + trueEffect.toFixed(2), 370, 70);
+
+    // Nodes
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i];
+      ctx.beginPath(); ctx.arc(n.x, n.y, 26, 0, 2 * Math.PI);
+      ctx.fillStyle = n.label === 'U' ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.05)';
+      ctx.strokeStyle = n.color; ctx.lineWidth = n.label === 'U' ? 1.5 : 2.5;
+      if (n.label === 'U') ctx.setLineDash([4, 3]); else ctx.setLineDash([]);
+      ctx.fill(); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = n.color; ctx.font = 'bold 16px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(n.label, n.x, n.y + 6);
+      ctx.fillStyle = '#9ca3af'; ctx.font = '10px Inter, system-ui, sans-serif';
+      ctx.fillText(n.desc, n.x, n.y + 42);
+    }
+
+    // Estimation results panel
+    var pY = 260;
+    var ivEst = trueEffect + (alpha1 > 0.01 ? gamma / alpha1 : 999);
+    var naiveEst = trueEffect + 0.30; // confounding bias
+
+    ctx.fillStyle = 'rgba(255,255,255,0.03)'; ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
+    ctx.fillRect(50, pY, 300, 100); ctx.strokeRect(50, pY, 300, 100);
+    ctx.fillRect(400, pY, 300, 100); ctx.strokeRect(400, pY, 300, 100);
+
+    // Naive OLS
+    ctx.fillStyle = '#ef4444'; ctx.font = 'bold 12px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Naive OLS (biased by U)', 200, pY + 20);
+    ctx.fillStyle = '#e4e4e7'; ctx.font = '14px Inter, system-ui, sans-serif';
+    ctx.fillText('β̂ = ' + naiveEst.toFixed(2), 200, pY + 45);
+    ctx.fillStyle = 'rgba(239,68,68,0.7)'; ctx.font = '11px Inter, system-ui, sans-serif';
+    ctx.fillText('Bias = +' + (naiveEst - trueEffect).toFixed(2) + ' (confounding)', 200, pY + 68);
+    ctx.fillStyle = '#9ca3af'; ctx.font = '10px Inter, system-ui, sans-serif';
+    ctx.fillText('True δ = ' + trueEffect.toFixed(2), 200, pY + 88);
+
+    // IV estimate
+    var ivColor = gamma < 0.01 ? '#22c55e' : (Math.abs(ivEst - trueEffect) < 0.15 ? '#f59e0b' : '#ef4444');
+    ctx.fillStyle = ivColor; ctx.font = 'bold 12px Inter, system-ui, sans-serif';
+    ctx.fillText('IV Estimate' + (gamma > 0.01 ? ' (contaminated)' : ''), 550, pY + 20);
+    ctx.fillStyle = '#e4e4e7'; ctx.font = '14px Inter, system-ui, sans-serif';
+    if (alpha1 < 0.08) {
+      ctx.fillText('δ̂ᵢᵥ = UNSTABLE', 550, pY + 45);
+    } else {
+      ctx.fillText('δ̂ᵢᵥ = ' + ivEst.toFixed(2), 550, pY + 45);
+    }
+    ctx.fillStyle = 'rgba(' + (gamma < 0.01 ? '34,197,94' : '245,158,11') + ',0.7)';
+    ctx.font = '11px Inter, system-ui, sans-serif';
+    var ivBias = alpha1 < 0.08 ? '∞ (weak instrument!)' : (ivEst - trueEffect).toFixed(3);
+    ctx.fillText('Bias = ' + ivBias, 550, pY + 68);
+    ctx.fillStyle = '#9ca3af'; ctx.font = '10px Inter, system-ui, sans-serif';
+    var formula = gamma > 0.01 ? 'δ + γ/Cov(Z,X) = ' + trueEffect.toFixed(2) + ' + ' + gamma.toFixed(2) + '/' + alpha1.toFixed(2) : 'δ = ' + trueEffect.toFixed(2) + ' (unbiased)';
+    ctx.fillText(formula, 550, pY + 88);
+
+    // Update narration
+    if (alpha1 < 0.10 && gamma < 0.01) {
+      narr.innerHTML = '<strong style="color:#ef4444;">Weak instrument problem.</strong> The first stage (α₁ = ' + alpha1.toFixed(2) + ') is too weak — $Z$ barely affects $X$. The IV estimate becomes extremely noisy and unreliable. Even small violations of the exclusion restriction get amplified by division by a near-zero denominator.';
+    } else if (alpha1 < 0.10 && gamma > 0.01) {
+      narr.innerHTML = '<strong style="color:#ef4444;">Worst case: weak instrument + exclusion violation.</strong> With α₁ = ' + alpha1.toFixed(2) + ' and γ = ' + gamma.toFixed(2) + ', the contamination bias γ/α₁ = ' + (gamma/alpha1).toFixed(2) + ' is <em>massive</em>. The IV estimate is more biased than naive OLS. This is the most dangerous scenario.';
+    } else if (gamma < 0.01) {
+      narr.innerHTML = '<strong style="color:#22c55e;">Valid IV with strong first stage.</strong> The instrument explains α₁ = ' + alpha1.toFixed(2) + ' of the variation in $X$. With the exclusion restriction satisfied (γ = 0), the IV estimate recovers the true causal effect δ = ' + trueEffect.toFixed(2) + ' without bias. Compare to naive OLS which is biased by +0.30 from the confounding through $U$.';
+    } else {
+      narr.innerHTML = '<strong style="color:#f59e0b;">Contaminated instrument.</strong> The direct effect γ = ' + gamma.toFixed(2) + ' violates the exclusion restriction. The IV estimate is biased by γ/Cov(Z,X) = ' + (gamma/alpha1).toFixed(3) + '. With a strong first stage (α₁ = ' + alpha1.toFixed(2) + '), the contamination is manageable. ' + (Math.abs(ivEst - trueEffect) < Math.abs(naiveEst - trueEffect) ? 'IV is still less biased than naive OLS.' : '<strong>IV is now MORE biased than OLS!</strong>');
+    }
+  }
+
+  strSlider.addEventListener('input', draw);
+  gamSlider.addEventListener('input', draw);
+
+  var ivObs = new MutationObserver(function() {
+    var panel = document.getElementById('panel-l7');
+    if (panel && panel.classList.contains('active')) draw();
+  });
+  ivObs.observe(document.getElementById('panel-l7'), { attributes: true, attributeFilter: ['class'] });
+  setTimeout(draw, 200);
+})();
+
+// ===== L8: A/B Test Time-Varying Effects =====
+(function() {
+  var CW = 750, CH = 340;
+  var canvas = document.getElementById('abCanvas');
+  if (!canvas) return;
+  var narr = document.getElementById('abNarration');
+
+  var abMode = 'novelty';
+  var trueEffect = 0.10;
+  var weeks = 12;
+
+  window.abToggle = function(mode, btn) {
+    abMode = mode;
+    document.querySelectorAll('.ab-btn').forEach(function(b) {
+      b.style.background = 'var(--card)'; b.style.color = 'var(--text)';
+      b.style.border = '1px solid var(--border)'; b.style.fontWeight = '400';
+      b.className = 'ab-btn';
+    });
+    btn.style.background = 'var(--accent)'; btn.style.color = '#fff';
+    btn.style.border = 'none'; btn.style.fontWeight = '600';
+    btn.className = 'ab-btn ab-active';
+    drawAB();
+  };
+
+  function getEffect(t) {
+    if (abMode === 'none') return trueEffect;
+    if (abMode === 'novelty') return trueEffect + 0.15 * Math.exp(-t / 2);
+    if (abMode === 'coldstart') return trueEffect * (1 - Math.exp(-t / 2.5));
+    if (abMode === 'hawthorne') return trueEffect + 0.08 * Math.exp(-t / 4);
+    return trueEffect;
+  }
+
+  function drawAB() {
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = CW * dpr; canvas.height = CH * dpr;
+    canvas.style.width = CW + 'px'; canvas.style.height = CH + 'px';
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#12141f'; ctx.fillRect(0, 0, CW, CH);
+
+    var pad = { left: 70, right: 40, top: 50, bottom: 50 };
+    var pW = CW - pad.left - pad.right, pH = CH - pad.top - pad.bottom;
+
+    // Y range
+    var yMin = -0.05, yMax = 0.30;
+
+    function toX(t) { return pad.left + (t / (weeks - 1)) * pW; }
+    function toY(v) { return pad.top + (1 - (v - yMin) / (yMax - yMin)) * pH; }
+
+    // Grid
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 0.5;
+    for (var yv = 0; yv <= 0.30; yv += 0.05) {
+      var gy = toY(yv);
+      ctx.beginPath(); ctx.moveTo(pad.left, gy); ctx.lineTo(CW - pad.right, gy); ctx.stroke();
+      ctx.fillStyle = '#9ca3af'; ctx.font = '10px Inter, system-ui, sans-serif'; ctx.textAlign = 'right';
+      ctx.fillText(yv.toFixed(2), pad.left - 8, gy + 3);
+    }
+
+    // Zero line
+    ctx.strokeStyle = 'rgba(239,68,68,0.3)'; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(pad.left, toY(0)); ctx.lineTo(CW - pad.right, toY(0)); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // True effect line
+    ctx.strokeStyle = 'rgba(34,197,94,0.4)'; ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]);
+    ctx.beginPath(); ctx.moveTo(pad.left, toY(trueEffect)); ctx.lineTo(CW - pad.right, toY(trueEffect)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(34,197,94,0.6)'; ctx.font = '10px Inter, system-ui, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('True long-run effect = ' + trueEffect.toFixed(2), CW - pad.right - 180, toY(trueEffect) - 6);
+
+    // X axis labels
+    ctx.fillStyle = '#9ca3af'; ctx.font = '10px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+    for (var t = 0; t < weeks; t++) {
+      ctx.fillText('W' + (t + 1), toX(t), CH - pad.bottom + 18);
+    }
+    ctx.fillText('Weeks since launch', CW / 2, CH - 10);
+
+    // Y axis label
+    ctx.save(); ctx.translate(18, (pad.top + CH - pad.bottom) / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Measured δₜ', 0, 0); ctx.restore();
+
+    // Effect curve
+    ctx.strokeStyle = '#6c63ff'; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for (var t2 = 0; t2 < weeks; t2++) {
+      var eff = getEffect(t2);
+      var ex = toX(t2), ey = toY(eff);
+      if (t2 === 0) ctx.moveTo(ex, ey); else ctx.lineTo(ex, ey);
+    }
+    ctx.stroke();
+
+    // Error bars and dots
+    for (var t3 = 0; t3 < weeks; t3++) {
+      var eff3 = getEffect(t3);
+      var ex3 = toX(t3), ey3 = toY(eff3);
+      var se = 0.03 + 0.01 * Math.sin(t3 * 0.7);
+
+      // Error bar
+      ctx.strokeStyle = 'rgba(108,99,255,0.4)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(ex3, toY(eff3 - se)); ctx.lineTo(ex3, toY(eff3 + se)); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(ex3 - 4, toY(eff3 - se)); ctx.lineTo(ex3 + 4, toY(eff3 - se)); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(ex3 - 4, toY(eff3 + se)); ctx.lineTo(ex3 + 4, toY(eff3 + se)); ctx.stroke();
+
+      // Dot
+      ctx.beginPath(); ctx.arc(ex3, ey3, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = '#6c63ff'; ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+    }
+
+    // Title
+    ctx.fillStyle = '#e4e4e7'; ctx.font = 'bold 13px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+    var titles = { novelty: 'Novelty Effect: Initial spike decays to true effect', coldstart: 'Cold Start: Effect ramps up as system learns', hawthorne: 'Hawthorne Effect: Awareness bias decays slowly', none: 'True Effect Only: Constant δ across time' };
+    ctx.fillText(titles[abMode] || '', CW / 2, pad.top - 18);
+
+    // Narration
+    var descs = {
+      novelty: '<strong>Novelty effect:</strong> Users explore the new feature enthusiastically at first (δ₁ = ' + getEffect(0).toFixed(2) + '), but engagement decays to the true long-run effect (δ = ' + trueEffect.toFixed(2) + '). If you call the experiment after week 1, you <em>overestimate</em> the effect by ' + ((getEffect(0) - trueEffect) / trueEffect * 100).toFixed(0) + '%. Wait for stabilization before reading results.',
+      coldstart: '<strong>Cold start:</strong> The system needs data before it works well. Early measurements <em>underestimate</em> the true effect. Week 1 shows δ₁ = ' + getEffect(0).toFixed(3) + ' vs the true ' + trueEffect.toFixed(2) + '. Common with recommendation systems and personalization features. Measure the time-series effect to ensure the transition period is over.',
+      hawthorne: '<strong>Hawthorne effect:</strong> Users behave differently because they know they are in an experiment. The bias decays slowly (half-life ≈ 4 weeks). This is especially tricky because it looks like a real but declining effect. Originally observed in factory lighting studies — both increasing <em>and</em> decreasing light improved productivity.',
+      none: '<strong>No time-varying bias:</strong> The measured effect is constant at δ = ' + trueEffect.toFixed(2) + ' across all weeks. Error bars represent sampling uncertainty. This is the ideal case — but rare in practice. Most A/B tests exhibit some combination of novelty, cold start, or Hawthorne effects.'
+    };
+    narr.innerHTML = descs[abMode] || '';
+  }
+
+  var abObs = new MutationObserver(function() {
+    var panel = document.getElementById('panel-l8');
+    if (panel && panel.classList.contains('active')) drawAB();
+  });
+  abObs.observe(document.getElementById('panel-l8'), { attributes: true, attributeFilter: ['class'] });
+  setTimeout(drawAB, 200);
+})();
+
+// ===== L9: Sharp RD Visualization =====
+(function() {
+  var CW = 750, CH = 380;
+  var canvas = document.getElementById('rdCanvas');
+  if (!canvas) return;
+  var bwSlider = document.getElementById('rdBandwidthSlider');
+  var bwLabel = document.getElementById('rdBandwidthLabel');
+  var narr = document.getElementById('rdNarration');
+
+  var cutoff = 0.5;
+  var trueJump = 0.35;
+  // seed RNG for reproducible scatter
+  function seededRandom(seed) { var x = Math.sin(seed) * 10000; return x - Math.floor(x); }
+
+  function drawRD() {
+    var bw = parseFloat(bwSlider.value);
+    bwLabel.textContent = bw.toFixed(2);
+
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = CW * dpr; canvas.height = CH * dpr;
+    canvas.style.width = CW + 'px'; canvas.style.height = CH + 'px';
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#12141f'; ctx.fillRect(0, 0, CW, CH);
+
+    var pad = { left: 60, right: 30, top: 50, bottom: 50 };
+    var pW = CW - pad.left - pad.right, pH = CH - pad.top - pad.bottom;
+
+    function toX(z) { return pad.left + z * pW; }
+    function toY(y) { return pad.top + (1 - (y + 0.3) / 1.6) * pH; }
+
+    // Background shading for bandwidth window
+    var bwL = toX(Math.max(0, cutoff - bw)), bwR = toX(Math.min(1, cutoff + bw));
+    ctx.fillStyle = 'rgba(108,99,255,0.06)';
+    ctx.fillRect(bwL, pad.top, bwR - bwL, pH);
+    ctx.strokeStyle = 'rgba(108,99,255,0.3)'; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(bwL, pad.top); ctx.lineTo(bwL, pad.top + pH); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(bwR, pad.top); ctx.lineTo(bwR, pad.top + pH); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Cutoff line
+    var cx = toX(cutoff);
+    ctx.strokeStyle = 'rgba(245,158,11,0.7)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(cx, pad.top); ctx.lineTo(cx, pad.top + pH); ctx.stroke();
+    ctx.fillStyle = 'rgba(245,158,11,0.9)'; ctx.font = 'bold 11px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Cutoff z₀', cx, pad.top - 8);
+
+    // Grid + axes
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, pad.top + pH); ctx.lineTo(CW - pad.right, pad.top + pH); ctx.stroke();
+
+    ctx.fillStyle = '#9ca3af'; ctx.font = '10px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Running variable Z', CW / 2, CH - 10);
+    ctx.save(); ctx.translate(18, (pad.top + CH - pad.bottom) / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Outcome Y', 0, 0); ctx.restore();
+
+    // True regression functions
+    function yControl(z) { return 0.2 + 0.6 * z - 0.3 * z * z; }
+    function yTreatment(z) { return yControl(z) + trueJump; }
+
+    // Draw regression curves
+    ctx.lineWidth = 2.5;
+    // Control side (z < cutoff)
+    ctx.strokeStyle = 'rgba(59,130,246,0.8)';
+    ctx.beginPath();
+    for (var i = 0; i <= 100; i++) {
+      var z = (i / 100) * cutoff;
+      var px = toX(z), py = toY(yControl(z));
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Treatment side (z >= cutoff)
+    ctx.strokeStyle = 'rgba(249,115,22,0.8)';
+    ctx.beginPath();
+    for (var j = 0; j <= 100; j++) {
+      var z2 = cutoff + (j / 100) * (1 - cutoff);
+      var px2 = toX(z2), py2 = toY(yTreatment(z2));
+      if (j === 0) ctx.moveTo(px2, py2); else ctx.lineTo(px2, py2);
+    }
+    ctx.stroke();
+
+    // Counterfactual (dashed) - control extended past cutoff
+    ctx.strokeStyle = 'rgba(59,130,246,0.3)'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    for (var k = 0; k <= 50; k++) {
+      var z3 = cutoff + (k / 50) * 0.3;
+      var px3 = toX(z3), py3 = toY(yControl(z3));
+      if (k === 0) ctx.moveTo(px3, py3); else ctx.lineTo(px3, py3);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Scatter points
+    for (var s = 0; s < 200; s++) {
+      var zs = seededRandom(s * 7 + 3);
+      var noise = (seededRandom(s * 13 + 7) - 0.5) * 0.25;
+      var ys = zs < cutoff ? yControl(zs) + noise : yTreatment(zs) + noise;
+      var inBW = Math.abs(zs - cutoff) <= bw;
+      var dotColor = zs < cutoff ? (inBW ? 'rgba(59,130,246,0.6)' : 'rgba(59,130,246,0.15)') : (inBW ? 'rgba(249,115,22,0.6)' : 'rgba(249,115,22,0.15)');
+      ctx.beginPath(); ctx.arc(toX(zs), toY(ys), inBW ? 4 : 2.5, 0, 2 * Math.PI);
+      ctx.fillStyle = dotColor; ctx.fill();
+    }
+
+    // Jump annotation
+    var jumpYTop = toY(yTreatment(cutoff));
+    var jumpYBot = toY(yControl(cutoff));
+    ctx.strokeStyle = 'rgba(34,197,94,0.8)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(cx + 15, jumpYTop); ctx.lineTo(cx + 15, jumpYBot); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx + 10, jumpYTop); ctx.lineTo(cx + 20, jumpYTop); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx + 10, jumpYBot); ctx.lineTo(cx + 20, jumpYBot); ctx.stroke();
+    ctx.fillStyle = '#22c55e'; ctx.font = 'bold 12px Inter, system-ui, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('δ = ' + trueJump.toFixed(2), cx + 25, (jumpYTop + jumpYBot) / 2 + 4);
+
+    // Title
+    ctx.fillStyle = '#e4e4e7'; ctx.font = 'bold 13px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Sharp RD: Treatment effect at the cutoff (bandwidth = ' + bw.toFixed(2) + ')', CW / 2, pad.top - 22);
+
+    // Legend
+    ctx.font = '11px Inter, system-ui, sans-serif';
+    ctx.fillStyle = 'rgba(59,130,246,0.8)'; ctx.fillText('● Control (Z < z₀)', pad.left + 40, pad.top + 16);
+    ctx.fillStyle = 'rgba(249,115,22,0.8)'; ctx.fillText('● Treatment (Z ≥ z₀)', pad.left + 180, pad.top + 16);
+
+    // Narration
+    if (bw < 0.15) {
+      narr.innerHTML = '<strong>Very narrow bandwidth (' + bw.toFixed(2) + ').</strong> Only units extremely close to the cutoff are used. This maximizes internal validity — these units are nearly identical — but reduces sample size dramatically, increasing standard errors. The effect estimate is very local.';
+    } else if (bw < 0.35) {
+      narr.innerHTML = '<strong>Moderate bandwidth (' + bw.toFixed(2) + ').</strong> Good balance between precision and validity. Units within the shaded band are "close enough" to the cutoff to be comparable, while providing enough data for a precise estimate. The gap at the cutoff (δ = ' + trueJump.toFixed(2) + ') represents the causal effect of crossing the threshold.';
+    } else {
+      narr.innerHTML = '<strong>Wide bandwidth (' + bw.toFixed(2) + ').</strong> More data = more precision, but units far from the cutoff may differ in other ways. The RD estimate starts to incorporate the functional form assumption (how $E[Y|Z]$ curves) rather than just the local comparison. If the curves are misspecified, the estimate is biased. <em>Bias-variance tradeoff at work.</em>';
+    }
+  }
+
+  bwSlider.addEventListener('input', drawRD);
+
+  var rdObs = new MutationObserver(function() {
+    var panel = document.getElementById('panel-l9');
+    if (panel && panel.classList.contains('active')) drawRD();
+  });
+  rdObs.observe(document.getElementById('panel-l9'), { attributes: true, attributeFilter: ['class'] });
+  setTimeout(drawRD, 200);
+})();
+
+// ===== L9: DID Visualization =====
+(function() {
+  var CW = 750, CH = 340;
+  var canvas = document.getElementById('didCanvas');
+  if (!canvas) return;
+  var narr = document.getElementById('didNarration');
+  var didMode = 'clean';
+
+  window.didToggle = function(mode, btn) {
+    didMode = mode;
+    document.querySelectorAll('.did-btn').forEach(function(b) {
+      b.style.background = 'var(--card)'; b.style.color = 'var(--text)';
+      b.style.border = '1px solid var(--border)'; b.style.fontWeight = '400';
+    });
+    btn.style.background = 'var(--accent)'; btn.style.color = '#fff';
+    btn.style.border = 'none'; btn.style.fontWeight = '600';
+    drawDID();
+  };
+
+  function drawDID() {
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = CW * dpr; canvas.height = CH * dpr;
+    canvas.style.width = CW + 'px'; canvas.style.height = CH + 'px';
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#12141f'; ctx.fillRect(0, 0, CW, CH);
+
+    var pad = { left: 70, right: 200, top: 50, bottom: 50 };
+    var pW = CW - pad.left - pad.right, pH = CH - pad.top - pad.bottom;
+
+    // Parameters
+    var b0 = 2.0; // control pre
+    var bt = 0.5; // time trend
+    var bd = 1.0; // group difference
+    var bdt = 0.8; // true treatment effect
+    var npBias = didMode === 'nonparallel' ? 0.6 : 0;
+    var tvBias = didMode === 'timevarying' ? 0.4 : 0;
+
+    var controlPre = b0;
+    var controlPost = b0 + bt;
+    var treatPre = b0 + bd;
+    var treatPost = b0 + bt + bd + bdt + npBias + tvBias;
+    var treatCF = b0 + bt + bd + npBias; // counterfactual
+
+    var yMin = 1.0, yMax = 5.5;
+    function toX(t) { return pad.left + t * pW; }
+    function toY(y) { return pad.top + (1 - (y - yMin) / (yMax - yMin)) * pH; }
+
+    // Axes
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, pad.top + pH); ctx.lineTo(pad.left + pW, pad.top + pH); ctx.stroke();
+    ctx.fillStyle = '#9ca3af'; ctx.font = '11px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Pre (t=0)', toX(0), pad.top + pH + 20);
+    ctx.fillText('Post (t=1)', toX(1), pad.top + pH + 20);
+    ctx.save(); ctx.translate(18, (pad.top + CH - pad.bottom) / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Outcome Y', 0, 0); ctx.restore();
+
+    // Treatment vertical line
+    ctx.strokeStyle = 'rgba(245,158,11,0.3)'; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(toX(0.5), pad.top); ctx.lineTo(toX(0.5), pad.top + pH); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(245,158,11,0.6)'; ctx.font = '10px Inter, system-ui, sans-serif';
+    ctx.fillText('t*', toX(0.5), pad.top - 5);
+
+    // Control line
+    ctx.strokeStyle = 'rgba(59,130,246,0.8)'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(toX(0), toY(controlPre)); ctx.lineTo(toX(1), toY(controlPost)); ctx.stroke();
+    ctx.fillStyle = 'rgba(59,130,246,0.9)'; ctx.font = '11px Inter, system-ui, sans-serif'; ctx.textAlign = 'left';
+
+    // Treatment actual
+    ctx.strokeStyle = 'rgba(249,115,22,0.8)'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(toX(0), toY(treatPre)); ctx.lineTo(toX(1), toY(treatPost)); ctx.stroke();
+
+    // Treatment counterfactual (dashed)
+    ctx.strokeStyle = 'rgba(249,115,22,0.3)'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(toX(0), toY(treatPre)); ctx.lineTo(toX(1), toY(treatCF)); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Dots
+    var dots = [
+      { x: 0, y: controlPre, c: 'rgba(59,130,246,0.9)' },
+      { x: 1, y: controlPost, c: 'rgba(59,130,246,0.9)' },
+      { x: 0, y: treatPre, c: 'rgba(249,115,22,0.9)' },
+      { x: 1, y: treatPost, c: 'rgba(249,115,22,0.9)' },
+      { x: 1, y: treatCF, c: 'rgba(249,115,22,0.3)' }
+    ];
+    dots.forEach(function(d) {
+      ctx.beginPath(); ctx.arc(toX(d.x), toY(d.y), 6, 0, 2 * Math.PI);
+      ctx.fillStyle = d.c; ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+    });
+
+    // DID bracket: measured effect
+    var eX = toX(1) + 15;
+    ctx.strokeStyle = 'rgba(34,197,94,0.8)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(eX, toY(treatPost)); ctx.lineTo(eX, toY(treatCF)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(eX - 5, toY(treatPost)); ctx.lineTo(eX + 5, toY(treatPost)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(eX - 5, toY(treatCF)); ctx.lineTo(eX + 5, toY(treatCF)); ctx.stroke();
+
+    var measuredEffect = treatPost - treatCF;
+    ctx.fillStyle = '#22c55e'; ctx.font = 'bold 12px Inter, system-ui, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('δ̂ = ' + measuredEffect.toFixed(2), eX + 10, (toY(treatPost) + toY(treatCF)) / 2 + 4);
+
+    // Legend panel on right
+    var lx = CW - 185, ly = pad.top + 10;
+    ctx.fillStyle = 'rgba(255,255,255,0.03)'; ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
+    ctx.fillRect(lx, ly, 175, 160); ctx.strokeRect(lx, ly, 175, 160);
+
+    ctx.font = 'bold 11px Inter, system-ui, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillStyle = 'rgba(59,130,246,0.9)'; ctx.fillText('── Control', lx + 10, ly + 20);
+    ctx.fillStyle = 'rgba(249,115,22,0.9)'; ctx.fillText('── Treatment', lx + 10, ly + 40);
+    ctx.fillStyle = 'rgba(249,115,22,0.4)'; ctx.fillText('- - Counterfactual', lx + 10, ly + 60);
+
+    ctx.font = '10px Inter, system-ui, sans-serif'; ctx.fillStyle = '#9ca3af';
+    ctx.fillText('True δ = ' + bdt.toFixed(2), lx + 10, ly + 88);
+    ctx.fillText('Measured δ̂ = ' + measuredEffect.toFixed(2), lx + 10, ly + 106);
+    var bias = measuredEffect - bdt;
+    ctx.fillStyle = Math.abs(bias) < 0.01 ? '#22c55e' : '#ef4444';
+    ctx.fillText('Bias = ' + (bias >= 0 ? '+' : '') + bias.toFixed(2), lx + 10, ly + 124);
+    ctx.fillStyle = '#9ca3af'; ctx.font = '9px Inter, system-ui, sans-serif';
+    ctx.fillText('β₀=' + b0.toFixed(1) + '  βₜ=' + bt.toFixed(1) + '  β_D=' + bd.toFixed(1), lx + 10, ly + 148);
+
+    // Title
+    ctx.fillStyle = '#e4e4e7'; ctx.font = 'bold 13px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+    var didTitles = { clean: 'Clean DID: Parallel trends hold, δ̂ = δ', nonparallel: 'Violation: Non-parallel trends bias the estimate', timevarying: 'Violation: Time-varying confounder adds bias' };
+    ctx.fillText(didTitles[didMode], (pad.left + pad.left + pW) / 2, pad.top - 18);
+
+    // Narration
+    var didNarrs = {
+      clean: '<strong>Clean DID.</strong> Both groups follow the same time trend (parallel). The treatment group starts higher (β_D = 1.0) and experiences the same time change (β_t = 0.5) <em>plus</em> the treatment effect (β_DT = ' + bdt.toFixed(1) + '). DID correctly estimates δ = ' + bdt.toFixed(2) + ' by differencing out both the group effect and the time trend. The constant confounder $U$ cancels perfectly.',
+      nonparallel: '<strong>Non-parallel trends.</strong> The treatment group was already trending upward faster than control <em>before</em> treatment. DID attributes this differential trend to the treatment, producing bias = +' + npBias.toFixed(1) + '. The estimated δ̂ = ' + measuredEffect.toFixed(2) + ' overstates the true effect of ' + bdt.toFixed(2) + '. <strong>Diagnostic:</strong> check for pre-treatment trend differences using multiple pre-periods.',
+      timevarying: '<strong>Time-varying confounder.</strong> A confounder $X_{it}$ changes differently across groups (e.g., the treatment group also got a marketing campaign). DID captures the treatment effect <em>plus</em> the confounding change, adding bias = +' + tvBias.toFixed(1) + '. <strong>Fix:</strong> add $X_{it}$ as a control variable in the regression — but only if $X_{it}$ is not itself caused by the treatment.'
+    };
+    narr.innerHTML = didNarrs[didMode] || '';
+  }
+
+  var didObs = new MutationObserver(function() {
+    var panel = document.getElementById('panel-l9');
+    if (panel && panel.classList.contains('active')) drawDID();
+  });
+  didObs.observe(document.getElementById('panel-l9'), { attributes: true, attributeFilter: ['class'] });
+  setTimeout(drawDID, 200);
+})();
+
+// ===== L10: Matrix Completion Visualization =====
+(function() {
+  var CW = 750, CH = 420;
+  var canvas = document.getElementById('mcCanvas');
+  if (!canvas) return;
+  var narr = document.getElementById('mcNarration');
+
+  var N = 5, T = 6;
+  // Treatment assignment: units 3,4 treated from t=3 onwards
+  var D = [];
+  for (var i = 0; i < N; i++) {
+    D[i] = [];
+    for (var t = 0; t < T; t++) {
+      D[i][t] = (i >= 3 && t >= 3) ? 1 : 0;
+    }
+  }
+
+  // Potential outcomes (latent)
+  var Y0 = [], Y1 = [];
+  function baseOutcome(i, t) { return 1.0 + 0.3 * t + 0.5 * i + 0.1 * Math.sin(i + t); }
+  for (var i2 = 0; i2 < N; i2++) {
+    Y0[i2] = []; Y1[i2] = [];
+    for (var t2 = 0; t2 < T; t2++) {
+      Y0[i2][t2] = baseOutcome(i2, t2);
+      Y1[i2][t2] = Y0[i2][t2] + 0.8; // constant treatment effect
+    }
+  }
+
+  function drawMC() {
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = CW * dpr; canvas.height = CH * dpr;
+    canvas.style.width = CW + 'px'; canvas.style.height = CH + 'px';
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#12141f'; ctx.fillRect(0, 0, CW, CH);
+
+    var cellW = 60, cellH = 36;
+    var gap = 30;
+
+    // Three matrices: D, Y^(D=0), Y^(D=1)
+    var matrices = [
+      { label: 'Treatment D_{it}', data: D, x: 30, colorFn: function(v) { return v === 1 ? 'rgba(249,115,22,0.3)' : 'rgba(59,130,246,0.15)'; }, textFn: function(v) { return v.toString(); } },
+      { label: 'Y^{(D=0)} — Control outcomes', x: 30, y: 200, isMissing: function(i, t) { return D[i][t] === 1; }, data: Y0, colorFn: function(v, miss) { return miss ? 'rgba(239,68,68,0.08)' : 'rgba(59,130,246,0.15)'; }, textFn: function(v, miss) { return miss ? '?' : v.toFixed(1); } },
+      { label: 'Y^{(D=1)} — Treatment outcomes', x: 400, y: 200, isMissing: function(i, t) { return D[i][t] === 0; }, data: Y1, colorFn: function(v, miss) { return miss ? 'rgba(239,68,68,0.08)' : 'rgba(249,115,22,0.15)'; }, textFn: function(v, miss) { return miss ? '?' : v.toFixed(1); } }
+    ];
+
+    // Draw D matrix
+    var mx = 250, my = 30;
+    ctx.fillStyle = '#e4e4e7'; ctx.font = 'bold 12px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Treatment Assignment D', mx + (T * cellW) / 2, my - 8);
+
+    // Column headers
+    ctx.fillStyle = '#9ca3af'; ctx.font = '10px Inter, system-ui, sans-serif';
+    for (var tc = 0; tc < T; tc++) {
+      ctx.fillText('t=' + (tc + 1), mx + tc * cellW + cellW / 2, my + 10);
+    }
+    // Row headers
+    ctx.textAlign = 'right';
+    for (var ir = 0; ir < N; ir++) {
+      ctx.fillText('Unit ' + (ir + 1), mx - 8, my + 22 + ir * cellH + cellH / 2 + 4);
+    }
+
+    // D cells
+    for (var id = 0; id < N; id++) {
+      for (var td = 0; td < T; td++) {
+        var cx2 = mx + td * cellW, cy2 = my + 22 + id * cellH;
+        var val = D[id][td];
+        ctx.fillStyle = val === 1 ? 'rgba(249,115,22,0.25)' : 'rgba(59,130,246,0.1)';
+        ctx.fillRect(cx2, cy2, cellW - 2, cellH - 2);
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
+        ctx.strokeRect(cx2, cy2, cellW - 2, cellH - 2);
+        ctx.fillStyle = val === 1 ? 'rgba(249,115,22,0.9)' : 'rgba(59,130,246,0.6)';
+        ctx.font = 'bold 13px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(val.toString(), cx2 + cellW / 2 - 1, cy2 + cellH / 2 + 4);
+      }
+    }
+
+    // Treatment line annotation
+    var tlx = mx + 3 * cellW - 1;
+    ctx.strokeStyle = 'rgba(245,158,11,0.6)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(tlx, my + 22); ctx.lineTo(tlx, my + 22 + N * cellH); ctx.stroke();
+    ctx.fillStyle = 'rgba(245,158,11,0.8)'; ctx.font = '9px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('t*', tlx, my + 22 + N * cellH + 12);
+
+    // Two potential outcome matrices
+    var matY = [
+      { label: 'Y^(D=0) — Control potential outcomes', ox: 30, data: Y0, isMissing: function(i, t) { return D[i][t] === 1; }, obsColor: 'rgba(59,130,246,0.15)', missColor: 'rgba(239,68,68,0.06)', textColor: 'rgba(59,130,246,0.7)', missTextColor: 'rgba(239,68,68,0.5)' },
+      { label: 'Y^(D=1) — Treatment potential outcomes', ox: 410, data: Y1, isMissing: function(i, t) { return D[i][t] === 0; }, obsColor: 'rgba(249,115,22,0.15)', missColor: 'rgba(239,68,68,0.06)', textColor: 'rgba(249,115,22,0.7)', missTextColor: 'rgba(239,68,68,0.5)' }
+    ];
+
+    var matTop = my + 22 + N * cellH + 30;
+    matY.forEach(function(m) {
+      ctx.fillStyle = '#e4e4e7'; ctx.font = 'bold 11px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(m.label, m.ox + (T * (cellW - 6)) / 2, matTop - 8);
+
+      var cw2 = cellW - 6, ch2 = cellH - 4;
+      ctx.fillStyle = '#9ca3af'; ctx.font = '9px Inter, system-ui, sans-serif';
+      for (var tc2 = 0; tc2 < T; tc2++) ctx.fillText('t=' + (tc2 + 1), m.ox + tc2 * cw2 + cw2 / 2, matTop + 10);
+      ctx.textAlign = 'right';
+      for (var ir2 = 0; ir2 < N; ir2++) ctx.fillText('U' + (ir2 + 1), m.ox - 4, matTop + 18 + ir2 * ch2 + ch2 / 2 + 3);
+
+      for (var im = 0; im < N; im++) {
+        for (var tm = 0; tm < T; tm++) {
+          var miss = m.isMissing(im, tm);
+          var cx3 = m.ox + tm * cw2, cy3 = matTop + 18 + im * ch2;
+          ctx.fillStyle = miss ? m.missColor : m.obsColor;
+          ctx.fillRect(cx3, cy3, cw2 - 2, ch2 - 2);
+          ctx.strokeStyle = miss ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.08)';
+          ctx.lineWidth = 1; ctx.strokeRect(cx3, cy3, cw2 - 2, ch2 - 2);
+          ctx.fillStyle = miss ? m.missTextColor : m.textColor;
+          ctx.font = (miss ? '' : 'bold ') + '11px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+          ctx.fillText(miss ? '?' : m.data[im][tm].toFixed(1), cx3 + cw2 / 2 - 1, cy3 + ch2 / 2 + 3);
+        }
+      }
+    });
+
+    narr.innerHTML = '<strong>Matrix completion for causal inference.</strong> The treatment matrix $D_{it}$ determines which potential outcomes we observe. Each cell is observed in exactly one matrix and missing in the other — they are perfectly complementary. <strong>MC-NNM</strong> fills in the "?" entries by exploiting low-rank structure: the $N \\times T$ outcome matrix is driven by a few latent factors, so its singular values decay quickly. The completed matrix provides counterfactual estimates for every unit at every time.';
+  }
+
+  var mcObs = new MutationObserver(function() {
+    var panel = document.getElementById('panel-l10');
+    if (panel && panel.classList.contains('active')) drawMC();
+  });
+  mcObs.observe(document.getElementById('panel-l10'), { attributes: true, attributeFilter: ['class'] });
+  setTimeout(drawMC, 200);
+})();
+
+// ===== L10: Regime Shift Visualization =====
+(function() {
+  var CW = 750, CH = 360;
+  var canvas = document.getElementById('regimeCanvas');
+  if (!canvas) return;
+  var slider = document.getElementById('regimeSlider');
+  var label = document.getElementById('regimeLabel');
+  var narr = document.getElementById('regimeNarration');
+
+  var betaX = 0.8, betaU = 0.5, beta = 0.6;
+  var sigU = 1.0, sigEpsPre = 0.5;
+  var tStar = 15, tMax = 30;
+
+  function seededRandom(seed) { var x = Math.sin(seed * 127.1) * 43758.5453; return x - Math.floor(x); }
+
+  function drawRegime() {
+    var sigEpsPost = parseFloat(slider.value);
+    label.textContent = sigEpsPost.toFixed(1);
+
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = CW * dpr; canvas.height = CH * dpr;
+    canvas.style.width = CW + 'px'; canvas.style.height = CH + 'px';
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#12141f'; ctx.fillRect(0, 0, CW, CH);
+
+    var pad = { left: 60, right: 30, top: 50, bottom: 50 };
+    var pW = CW - pad.left - pad.right, pH = CH - pad.top - pad.bottom;
+
+    function toX(t) { return pad.left + (t / tMax) * pW; }
+
+    // Generate data
+    var yTrue = [], yOLS = [], yOLSPost = [];
+    var olsBiasPre = betaU * beta * sigU * sigU / (beta * beta * sigU * sigU + sigEpsPre * sigEpsPre);
+    var olsBiasPost = betaU * beta * sigU * sigU / (beta * beta * sigU * sigU + sigEpsPost * sigEpsPost);
+    var olsSlopePre = betaX + olsBiasPre;
+    var olsSlopePost = betaX + olsBiasPost;
+
+    for (var t = 0; t < tMax; t++) {
+      var sigEps = t < tStar ? sigEpsPre : sigEpsPost;
+      var U = (seededRandom(t * 3 + 1) - 0.5) * 2 * sigU;
+      var epsX = (seededRandom(t * 7 + 2) - 0.5) * 2 * sigEps;
+      var epsY = (seededRandom(t * 11 + 3) - 0.5) * 0.6;
+      var X = beta * U + epsX;
+      var Y = betaX * X + betaU * U + epsY;
+
+      yTrue[t] = Y;
+      yOLS[t] = olsSlopePre * X; // OLS fitted on pre-t* data
+      yOLSPost[t] = olsSlopePost * X; // OLS refit on post-t* data
+    }
+
+    // Y range
+    var allY = yTrue.concat(yOLS);
+    var yMin = -4, yMax = 6;
+
+    function toY(y) { return pad.top + (1 - (y - yMin) / (yMax - yMin)) * pH; }
+
+    // Regime shift line
+    var tsx = toX(tStar);
+    ctx.fillStyle = 'rgba(245,158,11,0.06)';
+    ctx.fillRect(tsx, pad.top, CW - pad.right - tsx, pH);
+    ctx.strokeStyle = 'rgba(245,158,11,0.6)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(tsx, pad.top); ctx.lineTo(tsx, pad.top + pH); ctx.stroke();
+    ctx.fillStyle = 'rgba(245,158,11,0.8)'; ctx.font = 'bold 11px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('t* (regime shift)', tsx, pad.top - 8);
+
+    // Axes
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, pad.top + pH); ctx.lineTo(CW - pad.right, pad.top + pH); ctx.stroke();
+    ctx.fillStyle = '#9ca3af'; ctx.font = '10px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Time t', CW / 2, CH - 10);
+    ctx.save(); ctx.translate(18, (pad.top + CH - pad.bottom) / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Y_{t+1}', 0, 0); ctx.restore();
+
+    // True Y (dots)
+    for (var t2 = 0; t2 < tMax; t2++) {
+      ctx.beginPath(); ctx.arc(toX(t2), toY(yTrue[t2]), 3, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fill();
+    }
+
+    // OLS prediction (pre-regime fit applied everywhere)
+    ctx.strokeStyle = 'rgba(239,68,68,0.7)'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (var t3 = 0; t3 < tMax; t3++) {
+      var px = toX(t3), py = toY(yOLS[t3]);
+      if (t3 === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Causal model prediction (true beta_X, no bias)
+    ctx.strokeStyle = 'rgba(34,197,94,0.7)'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (var t4 = 0; t4 < tMax; t4++) {
+      var sigEps4 = t4 < tStar ? sigEpsPre : sigEpsPost;
+      var U4 = (seededRandom(t4 * 3 + 1) - 0.5) * 2 * sigU;
+      var epsX4 = (seededRandom(t4 * 7 + 2) - 0.5) * 2 * sigEps4;
+      var X4 = beta * U4 + epsX4;
+      var yPred = betaX * X4 + betaU * U4; // causal: knows both X and U
+      var px4 = toX(t4), py4 = toY(yPred);
+      if (t4 === 0) ctx.moveTo(px4, py4); else ctx.lineTo(px4, py4);
+    }
+    ctx.stroke();
+
+    // Legend
+    ctx.font = '11px Inter, system-ui, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillStyle = '#fff'; ctx.fillText('●', pad.left + 10, pad.top + 16);
+    ctx.fillStyle = '#9ca3af'; ctx.fillText('Observed Y', pad.left + 25, pad.top + 16);
+    ctx.fillStyle = 'rgba(239,68,68,0.9)'; ctx.fillText('── OLS (pre-regime fit)', pad.left + 10, pad.top + 34);
+    ctx.fillStyle = 'rgba(34,197,94,0.9)'; ctx.fillText('── Causal model', pad.left + 10, pad.top + 52);
+
+    // Bias annotations
+    ctx.font = 'bold 11px Inter, system-ui, sans-serif'; ctx.textAlign = 'right';
+    ctx.fillStyle = 'rgba(239,68,68,0.8)';
+    ctx.fillText('OLS bias (pre): ' + olsBiasPre.toFixed(3), CW - pad.right - 10, pad.top + 16);
+    ctx.fillText('OLS bias (post): ' + olsBiasPost.toFixed(3), CW - pad.right - 10, pad.top + 34);
+    ctx.fillStyle = Math.abs(olsBiasPre - olsBiasPost) < 0.01 ? '#22c55e' : '#ef4444';
+    ctx.fillText('Bias change: ' + (olsBiasPost - olsBiasPre >= 0 ? '+' : '') + (olsBiasPost - olsBiasPre).toFixed(3), CW - pad.right - 10, pad.top + 52);
+
+    // Narration
+    var biasDiff = Math.abs(olsBiasPost - olsBiasPre);
+    if (biasDiff < 0.02) {
+      narr.innerHTML = '<strong style="color:#22c55e;">No regime shift.</strong> With σ²_εX = ' + sigEpsPost.toFixed(1) + ' (same as pre-period), the OLS bias term is unchanged. Both the statistical and causal models work fine. The OLS slope β̂ = ' + olsSlopePre.toFixed(3) + ' is stable.';
+    } else if (sigEpsPost > sigEpsPre) {
+      narr.innerHTML = '<strong style="color:#ef4444;">Regime shift — increased exogenous noise.</strong> σ²_εX jumped from ' + sigEpsPre.toFixed(1) + ' to ' + sigEpsPost.toFixed(1) + '. The OLS bias <em>shrinks</em> from ' + olsBiasPre.toFixed(3) + ' to ' + olsBiasPost.toFixed(3) + ' — but the pre-regime OLS model doesn\'t know this. It applies the old (larger) bias to post-regime data, giving <strong>wrong predictions</strong>. The causal model (green) tracks the truth because its structural equations are invariant to noise changes.';
+    } else {
+      narr.innerHTML = '<strong style="color:#ef4444;">Regime shift — decreased exogenous noise.</strong> σ²_εX dropped from ' + sigEpsPre.toFixed(1) + ' to ' + sigEpsPost.toFixed(1) + '. The OLS bias <em>increases</em> from ' + olsBiasPre.toFixed(3) + ' to ' + olsBiasPost.toFixed(3) + ' — the confounder $U$ now explains more of $X$\'s variance, amplifying the omitted variable bias. The pre-regime OLS model underestimates this new bias. <strong>The causal model remains correct</strong> because β_X, β_U, and β are structural parameters that don\'t change with noise.';
+    }
+  }
+
+  slider.addEventListener('input', drawRegime);
+
+  var regObs = new MutationObserver(function() {
+    var panel = document.getElementById('panel-l10');
+    if (panel && panel.classList.contains('active')) drawRegime();
+  });
+  regObs.observe(document.getElementById('panel-l10'), { attributes: true, attributeFilter: ['class'] });
+  setTimeout(drawRegime, 200);
 })();
 
 </script>
