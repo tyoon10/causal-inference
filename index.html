@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Causal Inference Study Module</title>
+<title>Causal Inference Study Module — Final Exam</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
@@ -373,10 +373,12 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
   <button class="tab" data-tab="l4">L4: Conditioning</button>
   <button class="tab" data-tab="l5">L5: Weighting & ML</button>
   <button class="tab" data-tab="l6">L6: Practical</button>
-  <button class="tab" data-tab="l7">L7: Instruments</button>
-  <button class="tab" data-tab="l8">L8: Experiments</button>
-  <button class="tab" data-tab="l9">L9: Discontinuity</button>
-  <button class="tab" data-tab="l10">L10: Panel & TS</button>
+  <button class="tab" data-tab="l7">L7: IV</button>
+  <button class="tab" data-tab="l8">L8: Front-Door & Experiments</button>
+  <button class="tab" data-tab="l9">L9: RDD / DID / ITS</button>
+  <button class="tab" data-tab="l10">L10–11: Panel & s-Bias</button>
+  <button class="tab" data-tab="estimand">Estimand Selection</button>
+  <button class="tab" data-tab="drills">Drills (Final Review)</button>
   <button class="tab" data-tab="methods">Method Matrix</button>
   <button class="tab" data-tab="practice">Practice</button>
 </div>
@@ -417,13 +419,33 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
     </div>
   </div>
 
-  <h2 class="section-title">Exam Format</h2>
+  <h2 class="section-title">Final Exam: What's on It</h2>
+  <div class="card">
+    <p>Per the Review 2 deck (Adam Kelleher, May 6, 2026): the test <strong>focuses on the second half</strong>, but you also need graphs and d-separation. Application-focused, like the midterm.</p>
+    <p style="margin-top:8px;"><strong>Methods tested:</strong></p>
+    <ul style="margin-left:20px;">
+      <li>Instrumental Variables (L7) — Wald/2SLS, exclusion restriction, weak instruments, LATE</li>
+      <li>Front-Door Criterion (L8) — three graph conditions, FDC adjustment, per-mechanism shortcut</li>
+      <li>Regression Discontinuity (L9) — sharp & fuzzy, local linear regression, density check</li>
+      <li>Difference-in-Differences (L9) — parallel trends, ATT, time-varying controls</li>
+      <li>Interrupted Time Series (L9) — no-confounding assumption, counterfactual model</li>
+      <li>Panel & pooled cross-sectional designs (L10–11) — ever-treated, MCNNM</li>
+      <li>Selection bias adjustment (L10–11) — post-stratification, IPSW, time-series s-bias</li>
+    </ul>
+    <p style="margin-top:12px;"><strong>For each method, know:</strong></p>
+    <ul style="margin-left:20px;">
+      <li>The graph assumption required to use it.</li>
+      <li>How to recognize when a system satisfies it.</li>
+      <li>Each estimator's additional assumptions.</li>
+      <li>How to apply it (the code). <em>Open-book won't help if you haven't practiced.</em></li>
+    </ul>
+  </div>
+
   <div class="highlight-box">
-    <strong>Application-focused</strong> (no proofs). Three question types:
+    <strong>Format</strong> — similar to mid-term, with two specific differences:
     <ul style="margin-top:8px;padding-left:20px;">
-      <li><strong>Graph-based:</strong> Draw/analyze DAGs, find back-door sets, identify d-separations</li>
-      <li><strong>Computational:</strong> Calculate ATE via stratification, matching, IPW, regression</li>
-      <li><strong>Conceptual:</strong> Explain when/why methods work, identify violations, compare approaches</li>
+      <li>Qualitative questions describing DGPs, which you'll need to connect to causal assumptions (similar to the last homework).</li>
+      <li>A True/False section testing your understanding of inference methods (especially when their assumptions are justified).</li>
     </ul>
   </div>
 
@@ -1434,6 +1456,47 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
       </div>
     </div>
     <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Cov-Form Wald & Bias Decomposition <span class="badge badge-exam">Exam</span></div>
+      <div class="concept-body">
+        <p>For continuous $Z$, the equivalent form (under the SEM $Y = \delta D + U + \epsilon_Y$):</p>
+        <div class="formula-box">$\hat\delta_{IV} = \dfrac{\mathrm{Cov}(Y, Z)}{\mathrm{Cov}(D, Z)}$</div>
+        <p><strong>Three additional assumptions on top of exclusion:</strong></p>
+        <ol>
+          <li>$\delta \perp \{D, Z\}$ — the effect doesn't vary with $D$ or $Z$. Satisfied if $\delta$ is <em>constant</em> or <em>independently random</em>.</li>
+          <li>The exclusion restriction holds.</li>
+          <li>The $Z \to D$ relationship is <strong>not weak</strong>.</li>
+        </ol>
+        <p style="margin-top:8px;"><strong>Why "not weak":</strong> the estimator decomposes as</p>
+        <div class="formula-box">$\hat\delta_{IV} = \delta + \dfrac{\mathrm{Cov}(U,Z) + \mathrm{Cov}(\epsilon_Y,Z)}{\mathrm{Cov}(D,Z)}$</div>
+        <p>The numerator is bias from any small violation of the exclusion restriction. As $\mathrm{Cov}(D,Z) \to 0$, that bias <strong>blows up</strong>. Weak instruments amplify any leakage.</p>
+        <p style="margin-top:8px;font-size:0.88rem;color:var(--text-dim);"><strong>Diagnostic:</strong> first-stage F-statistic. Rule of thumb: $F \geq 10$.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Exclusion Restriction (Graphical) <span class="badge badge-core">Core</span></div>
+      <div class="concept-body">
+        <p>The course's formal definition:</p>
+        <div class="formula-box">$(Z \perp Y)_{G_{\overline{D}}}$</div>
+        <p>$Z$ is independent of $Y$ once you delete the edges <em>into</em> $D$ in the graph. Qualitatively: $Z$ causes $Y$ <strong>only through</strong> $D$.</p>
+        <p style="margin-top:8px;"><strong>Contaminated version</strong> (still works for TSLS): $(Z \perp Y \mid W)_{G_{\overline{D}}}$ for some set $W$. Include $W$ in both stages of TSLS.</p>
+        <p style="margin-top:8px;font-size:0.88rem;"><strong>Worked example — non-compliance:</strong> users <em>assigned</em> to see an ad ($Z$). Only those who open the app see it ($D$). Latent budget $U$ confounds $D$ and purchases $Y$. In $G_{\overline D}$ both $Z \to D$ and $U \to D$ are removed; only $U \to Y$ remains, $Z$ is isolated, $(Z \perp Y)_{G_{\overline D}}$ holds. ✓</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">LATE: Revised Assumptions <span class="badge badge-exam">Exam</span></div>
+      <div class="concept-body">
+        <p>When effects are heterogeneous and $\delta \not\perp \{D, Z\}$, the same Wald estimator instead identifies the LATE on a subgroup $G$:</p>
+        <div class="formula-box">$E[\delta \mid G = g]$</div>
+        <p>For binary $Z$ and $D$, the revised assumptions:</p>
+        <ol>
+          <li>The exclusion restriction (or its contaminated form).</li>
+          <li>$\kappa \neq 0$ for some — the instrument isn't weak.</li>
+          <li><strong>Monotonicity:</strong> $\kappa \geq 0$ <em>xor</em> $\kappa \leq 0$ for all units. (Replaces $\delta \perp \{D, Z\}$.)</li>
+        </ol>
+        <p style="margin-top:8px;font-size:0.88rem;">If monotonicity holds with $\kappa \geq 0$, $G$ is the <strong>compliers</strong>; if $\kappa \leq 0$, the <strong>defiers</strong>. The two groups are mutually exclusive once a direction is fixed. All TSLS code is unchanged — only the interpretation shifts.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
       <div class="concept-header">Two-Stage Least Squares (2SLS) <span class="badge badge-method">Method</span></div>
       <div class="concept-body">
         <p>Generalization of Wald to continuous/multi-valued instruments:</p>
@@ -1493,10 +1556,74 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
   </div>
 </div>
 
-<!-- ==================== LECTURE 8: EXPERIMENTS ==================== -->
+<!-- ==================== LECTURE 8: FRONT-DOOR & EXPERIMENTS ==================== -->
 <div class="tab-panel" id="panel-l8">
-  <h2 class="section-title">L8: Experiments & Decomposition</h2>
+  <h2 class="section-title">L8: Front-Door Criterion & Experiments</h2>
 
+  <div class="card">
+    <p>Two parallel themes for L8. First: another escape from unblockable confounding — the <strong>Front-Door Criterion (FDC)</strong>, which identifies $P(Y \mid \mathrm{do}(X))$ via a fully observed mediator. Second: experiments and effect decomposition. The two are linked: FDC asks "what is the total $X \to Y$ effect through the mechanism?"; mediation asks "how much of that effect goes through which mechanism?"</p>
+  </div>
+
+  <h2 class="section-title">Front-Door Criterion</h2>
+  <div class="concept-grid">
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Three Graph Conditions <span class="badge badge-core">Core</span></div>
+      <div class="concept-body">
+        <p>A set $Z$ satisfies the FDC relative to ordered pair $(X, Y)$ if:</p>
+        <ol>
+          <li><strong>$Z$ intercepts all directed paths from $X$ to $Y$.</strong> Every causal arrow from $X$ to $Y$ must pass through some node in $Z$.</li>
+          <li><strong>No unblocked back-door path from $X$ to $Z$.</strong> The mediator's value, given $X$, is "as-if random."</li>
+          <li><strong>All back-door paths from $Z$ to $Y$ are blocked by $X$.</strong> Conditioning on $X$ closes any open path from $Z$ to $Y$.</li>
+        </ol>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Front-Door Adjustment Formula <span class="badge badge-core">Core</span></div>
+      <div class="concept-body">
+        <div class="formula-box">$P(Y \mid \mathrm{do}(X{=}x)) = \displaystyle\sum_{z} P(Z{=}z \mid X{=}x) \sum_{x'} P(Y \mid X{=}x', Z{=}z)\, P(X{=}x')$</div>
+        <p>Read it as a two-stage chain rule:</p>
+        <ul>
+          <li>$P(Z \mid X)$ — how the mediator responds to the treatment (this is causal because of condition 2).</li>
+          <li>$\sum_{x'} P(Y \mid X{=}x', Z{=}z)\, P(X{=}x')$ — the back-door-adjusted effect of $Z$ on $Y$, where $X$ blocks the back-door (condition 3).</li>
+        </ul>
+        <p style="margin-top:8px;"><strong>No new assumptions beyond the graph + the usual modeling assumptions:</strong> sufficient capacity and the right loss function for whichever conditional distributions you fit.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Worked Example: Two Mediators <span class="badge badge-method">Example</span></div>
+      <div class="concept-body">
+        <p style="font-size:0.92rem;"><em>Graph: $X \to Z_1 \to Y$, $X \to Z_2 \to Y$, $U \to X$, $U \to Y$. Take $Z = \{Z_1, Z_2\}$.</em></p>
+        <table class="comparison-table" style="margin-top:8px;font-size:0.84rem;">
+          <tr><th>Condition</th><th>Paths to check</th><th>Why it holds</th></tr>
+          <tr><td>1. Intercepts $X \to Y$</td><td>$X \to Z_1 \to Y$; $X \to Z_2 \to Y$</td><td>$Z_1$ blocks the first; $Z_2$ blocks the second.</td></tr>
+          <tr><td>2. No open back-door $X \to Z$</td><td>$X \leftarrow U \to Y \leftarrow Z_1$; $X \leftarrow U \to Y \leftarrow Z_2$</td><td>Collider at $Y$ blocks both paths automatically. (Generally true for a mechanism.)</td></tr>
+          <tr><td>3. Back-doors $Z \to Y$ blocked by $X$</td><td>$Z_1 \leftarrow X \to Z_2 \to Y$ and three other forks/chains through $X$</td><td>$X$ is a fork or chain node on all paths; conditioning on $X$ blocks them.</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Per-Mechanism Shortcut <span class="badge badge-method">Trick</span></div>
+      <div class="concept-body">
+        <p>If the structural equation is additive across mediators:</p>
+        <div class="formula-box">$Y = Y_1(Z_1, X) + Y_2(Z_2, X) + \cdots + Y_k(Z_k, X)$</div>
+        <p>Then you can estimate the effect through each mediator independently — you don't need to carry the full $Z$. Useful when one mediator is observed but others aren't, or for attribution.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">When FDC Beats Back-Door <span class="badge badge-exam">Exam</span></div>
+      <div class="concept-body">
+        <p>Use FDC when:</p>
+        <ul>
+          <li>Confounder $U$ between $X$ and $Y$ is unmeasured or unmeasurable.</li>
+          <li>You <em>can</em> measure the mechanism (mediator) cleanly.</li>
+          <li>The mediator captures all of the $X \to Y$ effect (condition 1).</li>
+        </ul>
+        <p style="margin-top:8px;"><strong>Classic example:</strong> price → funnel metrics → purchases. Customer budget $U$ confounds price and purchases (via personalization), but the funnel is fully measured.</p>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">Experiments & Decomposition</h2>
   <div class="card">
     <p>Randomized experiments are the gold standard for causal inference. When you <strong>control assignment</strong>, confounding disappears by design. But real experiments introduce complications: non-compliance, time-varying effects, and the challenge of decomposing <em>how</em> a treatment works.</p>
   </div>
@@ -1628,6 +1755,19 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
         <p><strong>McCrary test:</strong> Formal test for discontinuity in the running variable's density.</p>
       </div>
     </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Sharp RD: Full Assumption List <span class="badge badge-exam">Exam</span></div>
+      <div class="concept-body">
+        <p>From the Review 2 deck — what to verify on the exam:</p>
+        <ul>
+          <li><strong>Sharpness:</strong> $P(D \mid Z = z_0^+) - P(D \mid Z = z_0^-) = 1$. Treatment really flips at $z_0$.</li>
+          <li><strong>Continuity of potential outcomes</strong> in the running variable at $z_0$ — if you didn't flip $D$, $Y$ would be continuous; nothing else changes at $z_0$.</li>
+          <li><strong>$Z$ is a back-door set at the cutoff:</strong> $Y^{(D=d)} \perp D \mid Z = z_0$.</li>
+          <li><strong>No manipulation</strong> of the running variable (density check / McCrary).</li>
+        </ul>
+        <p style="margin-top:8px;font-size:0.88rem;"><strong>Estimator best practices:</strong> use a loss consistent with conditional expectations; avoid global polynomials (sensitive to data far from the cutoff); prefer <strong>local linear regression</strong> within a bandwidth.</p>
+      </div>
+    </div>
   </div>
 
   <h2 class="section-title">Time Series Designs</h2>
@@ -1734,9 +1874,9 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
   </div>
 </div>
 
-<!-- ==================== LECTURE 10: PANEL & TIME SERIES ==================== -->
+<!-- ==================== LECTURES 10–11: PANEL & SELECTION BIAS ==================== -->
 <div class="tab-panel" id="panel-l10">
-  <h2 class="section-title">L10: Time Series & Panel Designs</h2>
+  <h2 class="section-title">L10–11: Time Series, Panel Designs & Selection Bias</h2>
 
   <div class="card">
     <p>When we move from cross-sectional data to time series and panels, new phenomena arise: <strong>dependence over time</strong>, <strong>regime shifts</strong>, and <strong>latent factors</strong>. The fundamental problem evolves &mdash; now we need to account for <em>when</em> treatment happens, not just <em>whether</em> it happens.</p>
@@ -1880,6 +2020,318 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
     </div>
     <canvas id="regimeCanvas" width="750" height="360" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
     <div id="regimeNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+  </div>
+
+  <!-- Selection Bias Adjustment (Review 2 L11 content) -->
+  <h2 class="section-title">Selection Bias Adjustment (L11)</h2>
+  <div class="card">
+    <p>Your sample is drawn under selection $S=1$ that depends on observables. The joint $P(X, Y \mid S=1)$ in your data isn't the population joint $P(X, Y)$. Adjustment is possible <strong>iff</strong> there's a covariate set $C$ that mediates selection.</p>
+  </div>
+
+  <div class="concept-card" onclick="toggleCard(this)">
+    <div class="concept-header">Theorem: s-Bias Adjustment <span class="badge badge-core">Core</span></div>
+    <div class="concept-body">
+      <p>If $C$ is measured both in the biased sample (alongside $X$ and $Y$) and at the population level (alongside $X$), and if $Y \perp S \mid \{X, C\}$, then $P(Y \mid X)$ is <strong>s-recoverable</strong>:</p>
+      <div class="formula-box">$P(Y \mid X) = \displaystyle\sum_c \underbrace{P(Y \mid X, S=1, C=c)}_{\text{sample}} \cdot \underbrace{P(C=c \mid X)}_{\text{population}}$</div>
+      <p style="margin-top:8px;font-size:0.88rem;"><strong>Critical:</strong> the assumption $Y \perp S \mid \{X, C\}$ is <em>untestable</em> — you don't have population-level $Y$ data, otherwise you wouldn't need the adjustment. Justify it with domain knowledge about what drives selection.</p>
+    </div>
+  </div>
+
+  <h2 class="section-title">Three Selection-Bias Estimators</h2>
+  <div class="concept-grid">
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Post-Stratification Weighting <span class="badge badge-method">Estimator</span></div>
+      <div class="concept-body">
+        <p><strong>When:</strong> $X = \emptyset$ (you want a population-level expectation, not a conditional). And you only need an average, not a distribution.</p>
+        <div class="formula-box">$\hat E[Y] = \displaystyle\sum_c E[Y \mid S=1, C=c]\, P(C=c)$</div>
+        <p style="font-size:0.88rem;">Per-row weights: $w_i = P(C=c_i)/P(C=c_i \mid S=1)$. Standard survey-research move: weight your sample to match population strata (Census).</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Inverse Selection-Propensity Weighting <span class="badge badge-method">Estimator</span></div>
+      <div class="concept-body">
+        <p><strong>When:</strong> you have a model for $P(S=1 \mid X, C)$ — or you can recover it from joint measurements:</p>
+        <div class="formula-box">$P(S=1 \mid X, C) = \dfrac{P(X, C \mid S=1)}{P(X, C)} P(S=1)$</div>
+        <p>Optimize a weighted loss to fit any model without selection bias:</p>
+        <div class="formula-box">$E_P[\mathcal L] = \displaystyle\sum_{i \in S} \mathcal L(x_i, y_i) \cdot \dfrac{1}{P(S=1 \mid X=x_i, C=c_i)}$</div>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Time-Series s-Bias Adjustment <span class="badge badge-method">Estimator</span></div>
+      <div class="concept-body">
+        <p><strong>When:</strong> the population composition is roughly constant in time (or varies slowly enough to ignore) — so $N$ and $P(C=c)$ can be treated as fixed. Fit OLS to estimate $NP(C=c)$:</p>
+        <div class="formula-box">$N E[Y_t] = \displaystyle\sum_c E[Y_t \mid S=1, C=c]\, NP(C=c)$</div>
+        <p style="font-size:0.88rem;">Use when you observe $Y_t$ over time in a biased panel and want population-level $E[Y_t]$ trajectory.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="highlight-box">
+    <strong>When adjustment fails:</strong> if selection $S$ is on a <em>descendant of the outcome</em> (e.g. a 30-second dwell-time filter where engaged users dwell longer <em>and</em> buy more), no reweighting on observed covariates can recover $P(Y \mid X)$. The fix is upstream — remove the filter at the data source — not a clever weighting scheme.
+  </div>
+</div>
+
+<!-- ==================== ESTIMAND SELECTION ==================== -->
+<div class="tab-panel" id="panel-estimand">
+  <h2 class="section-title">Estimand Selection: Statistical vs Causal</h2>
+
+  <div class="card">
+    <p><strong>The question determines the estimand, not the dataset.</strong> Pick the estimand first, then choose a method that identifies it from the data you have. Conflating "what we want to know" with "what we can compute" is the most common failure mode in applied work.</p>
+  </div>
+
+  <h2 class="section-title">Two Definitions</h2>
+  <div class="concept-grid">
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Statistical Estimand <span class="badge badge-core">Core</span></div>
+      <div class="concept-body">
+        <p>A functional of the <strong>observational</strong> joint distribution:</p>
+        <div class="formula-box">$\theta = T(P(V))$</div>
+        <p>Examples: population means, conditional probabilities, quantiles. Lives at Pearl's Level 1 (seeing).</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Causal Estimand <span class="badge badge-core">Core</span></div>
+      <div class="concept-body">
+        <p>A functional of an <strong>interventional</strong> distribution:</p>
+        <div class="formula-box">$\psi = T(P(V \mid \mathrm{do}(X)))$</div>
+        <p>Examples: ATE, ATT, CATE, LATE, elasticities. Lives at Pearl's Level 2 (doing).</p>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">Three Red Flags: When Causal Is Required</h2>
+  <div class="card">
+    <p>You need a causal estimand (not a statistical one) when <em>any</em> of these hold:</p>
+    <ol style="margin-left:20px;">
+      <li><strong>Feedback.</strong> The estimand will <em>change how $X$ is chosen</em>. Conditional $P(Y \mid X)$ depends on the old policy; $P(Y \mid \mathrm{do}(X))$ doesn't. Any rollout, pricing change, threshold shift, or recommendation policy update is here.</li>
+      <li><strong>Shift.</strong> Exogenous distributions drift but structural equations are stable. Structural parameters transfer across the shift; regression coefficients don't. <em>(Forecasting under regime change. Google Flu Trends: media-variance spike in 2013 changed the fitted coefficient even though the causal effect was constant.)</em></li>
+      <li><strong>Causal target.</strong> The question is inherently about intervention — elasticity, ATE, lift, "what if we did X?"</li>
+    </ol>
+  </div>
+
+  <h2 class="section-title">The 2&times;2 Adjustment Grid</h2>
+  <div class="card">
+    <p>Two questions decide the cell:</p>
+    <ul style="margin-left:20px;">
+      <li>Is the target $P(\cdot)$ or $P(\cdot \mid \mathrm{do}(X))$? <em>(rows)</em></li>
+      <li>Is there an open path between $S$ (selection) and $Y$? <em>(columns)</em></li>
+    </ul>
+    <table class="comparison-table" style="margin-top:12px;">
+      <tr><th></th><th>No selection bias</th><th>Selection bias</th></tr>
+      <tr><td><strong>Statistical target</strong></td><td><em>(none — clean random sample, no adjustment needed)</em></td><td>s-bias adjustment (post-stratification, IPSW, time-series s-bias)</td></tr>
+      <tr><td><strong>Causal target</strong></td><td>Back-door / front-door / IV / RDD / DID / ITS</td><td>s-backdoor (combine selection adjustment with causal identification)</td></tr>
+    </table>
+    <p style="margin-top:12px;font-size:0.9rem;"><strong>Exam discipline:</strong> name the cell <em>first</em>; the method follows. The empty cell (statistical target, no selection bias) is rare in business — a clean random sample of the population needs none of this.</p>
+  </div>
+
+  <h2 class="section-title">Estimand Fallback: When You Can't Identify the One You Want</h2>
+  <div class="card">
+    <p>Often you start with one estimand, realize you can't identify it from the data you have, and back off to a related one:</p>
+    <table class="comparison-table">
+      <tr><th>Want</th><th>Can't identify because…</th><th>Fall back to</th></tr>
+      <tr><td>ATE</td><td>Heterogeneous effects + IV</td><td>LATE on compliers</td></tr>
+      <tr><td>ATE</td><td>RDD only identifies at the cutoff</td><td>CATE at $z_0$</td></tr>
+      <tr><td>ATE</td><td>DID only valid for treated group</td><td>ATT on the treated</td></tr>
+      <tr><td>ATT in observational data</td><td>Common support fails for some treated units</td><td>ATT on the overlap region</td></tr>
+    </table>
+    <p style="margin-top:8px;font-size:0.9rem;">Each fallback narrows the population the answer applies to. Be explicit about it when reporting — "the effect on compliers near the cutoff" is a much more honest claim than "the effect."</p>
+  </div>
+</div>
+
+<!-- ==================== DRILLS (Final Review) ==================== -->
+<div class="tab-panel" id="panel-drills">
+  <h2 class="section-title">Situational Drills (Final Review)</h2>
+
+  <div class="card">
+    <p>Each drill is a real business situation. <strong>None of them name an estimand up front — that's the first thing you have to decide.</strong> Three slides per drill: business problem, inference problem (what are we estimating? statistical or causal? why?), identification &amp; estimator. Three at Level 1 (statistical), four at Level 2 (causal).</p>
+  </div>
+
+  <h2 class="section-title">L1.1: Credit-Card Nowcast</h2>
+  <div class="concept-grid">
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Business Problem</div>
+      <div class="concept-body">
+        <p>Your hedge fund team trades a major US retailer's stock around its quarterly earnings announcement. To position before the print, you've licensed a credit-card transaction panel from a card issuer, hoping to nowcast retailer revenue. <strong>Catch:</strong> the cardholder base over-represents high-income, urban consumers. Earnings drop in two weeks.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Inference Problem</div>
+      <div class="concept-body">
+        <p><strong>Estimand:</strong> Statistical: $E[\text{revenue}_m \mid q]$ at the US population level.</p>
+        <p><strong>Why statistical?</strong> No counterfactual, no feedback, no shift — just a current-state quantity, observed under biased sampling. The trade rests on the retailer's actual reported revenue, not on changing any policy.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Identification & Estimator</div>
+      <div class="concept-body">
+        <p><strong>Identification:</strong> Selection bias from sampling. With demographics $C$ measured both in-panel and at the population level (Census), assume $\text{revenue} \perp S \mid C$. s-bias adjustment applies.</p>
+        <p><strong>Estimator:</strong> Post-stratification weighted sum.</p>
+        <div class="formula-box">$\hat R_m = \displaystyle\sum_c E[\text{revenue}_m \mid C=c, S=1]\, P(C=c)$</div>
+        <p>with weights $w_i = P(C=c_i)/P(C=c_i \mid S=1)$.</p>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">L1.2: Foot-Traffic for Lease Renewal</h2>
+  <div class="concept-grid">
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Business Problem</div>
+      <div class="concept-body">
+        <p>You work at a REIT. The lease on a flagship retail property comes up for renewal. You want monthly visit counts for the last 12 months. You subscribe to a geolocation panel — anonymized SDK pings. <strong>Two issues:</strong> (1) which devices are in the panel ($S_1$) depends on apps installed; (2) ping cadence ($S_2$) varies by app and location.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Inference Problem</div>
+      <div class="concept-body">
+        <p><strong>Estimand:</strong> Statistical: $E[V_{P,t}]$ — expected monthly visits at the population level.</p>
+        <p><strong>Why statistical?</strong> Renewal needs an honest count of how busy the property has been. No decision changes how visits are generated; only how visits are valued.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Identification & Estimator</div>
+      <div class="concept-body">
+        <p><strong>Identification:</strong> Two layers of selection. Adjust on demographics $Z$ for $S_1$; on $(Z, L)$ for $S_2$.</p>
+        <p><strong>Estimator:</strong> Stage-wise inverse-propensity weighting:</p>
+        <div class="formula-box">$w = \dfrac{1}{P(S_1 \mid Z) \cdot P(S_2 \mid Z, L, S_1=1)}$</div>
+        <p>Calibrate to a known ground-truth count (e.g. a nearby stadium event with reported attendance) before trusting absolute levels.</p>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">L1.3: Banner-Ad Reporting</h2>
+  <div class="concept-grid">
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Business Problem</div>
+      <div class="concept-body">
+        <p>Your e-commerce growth team launched a banner-ad campaign last week. The VP wants to know: of users who saw the banner, what fraction purchased? <strong>Catch:</strong> analytics only records sessions with dwell-time $\geq 30$s (a long-standing bot/bounce filter).</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Inference Problem</div>
+      <div class="concept-body">
+        <p><strong>Estimand:</strong> Statistical conditional: $P(\text{purchase} \mid \text{banner shown})$ over all banner viewers.</p>
+        <p><strong>Why statistical?</strong> No intervention — just describing what happened. <em>But</em> verify the VP doesn't actually want a causal estimand (lift) — they often do without realizing it.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Identification & Estimator</div>
+      <div class="concept-body">
+        <p><strong>Identification fails.</strong> $S$ (dwell-time $\geq 30$s) is on a <em>descendant of the outcome</em> — engaged users dwell longer <em>and</em> buy more. No reweighting on observed covariates recovers $P(Y \mid X)$.</p>
+        <p><strong>Estimator:</strong> None that fixes it. Right answer: remove the filter at the source. Otherwise, give the VP a bound:</p>
+        <div class="formula-box">$E[Y] - E[Y \mid S=1] = P(S=0)\bigl(E[Y \mid S=0] - E[Y \mid S=1]\bigr)$</div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">L2.1: Ad Rollout (IV)</h2>
+  <div class="concept-grid">
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Business Problem</div>
+      <div class="concept-body">
+        <p>Marketing wants to know whether to spend $10M next quarter rolling out a video-ad campaign. Last month they ran a small randomized pilot: half of users were eligible to be served the ad, but only $\sim 30\%$ of the eligible group ever opened the app and saw it.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Inference Problem</div>
+      <div class="concept-body">
+        <p><strong>Estimand:</strong> Causal: $E[Y^{(D=1)} - Y^{(D=0)}]$. Under heterogeneity, retreat to LATE on compliers.</p>
+        <p><strong>Why causal?</strong> Two red flags: (1) rollout will change how often $D$ happens (feedback), (2) the question is inherently counterfactual.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Identification & Estimator</div>
+      <div class="concept-body">
+        <p><strong>Identification:</strong> Instrumental variables. $Z =$ randomized eligibility, $D =$ ad view. Exclusion restriction holds <em>by design</em>.</p>
+        <div class="formula-box">$\hat\delta = \dfrac{\mathrm{Cov}(Y, Z)}{\mathrm{Cov}(D, Z)}$</div>
+        <p>Or 2SLS. Under monotonicity, the estimate is LATE on compliers (the $\sim 30\%$ who view iff eligible).</p>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">L2.2: Pricing Decision (FDC)</h2>
+  <div class="concept-grid">
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Business Problem</div>
+      <div class="concept-body">
+        <p>Pricing team is debating dropping a SKU price by 10% next quarter. They have a year of observational sales data: every transaction has a price plus per-session funnel metrics — <em>items viewed</em> ($Z_1$) and <em>time-to-checkout</em> ($Z_2$). Customer budget $U$ confounds: discount-sensitive shoppers buy more <em>and</em> get shown lower prices via personalization.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Inference Problem</div>
+      <div class="concept-body">
+        <p><strong>Estimand:</strong> Causal: $E[Y \mid \mathrm{do}(X)]$.</p>
+        <p><strong>Why causal?</strong> The price drop is a policy change. The relationship under the current personalization regime won't transfer to a regime where everyone gets the lower price.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Identification & Estimator</div>
+      <div class="concept-body">
+        <p><strong>Identification:</strong> Back-door could work if recommendation scores are accessible. Otherwise, since price plausibly affects purchases <em>only through</em> the funnel, use the front-door criterion via $\{Z_1, Z_2\}$.</p>
+        <div class="formula-box">$P(Y \mid \mathrm{do}(X{=}x)) = \displaystyle\sum_z P(Z{=}z \mid X{=}x) \sum_{x'} P(Y \mid X{=}x', Z{=}z) P(X{=}x')$</div>
+        <p>Or, if the funnel is additive in $Z_1, Z_2$, the per-mechanism estimator.</p>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">L2.3: Scholarship Program (RDD)</h2>
+  <div class="concept-grid">
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Business Problem</div>
+      <div class="concept-body">
+        <p>A provost is reviewing the merit-scholarship program. Currently, GPA $\geq 3.5$ gets the scholarship automatically. The provost is considering lowering the cutoff to 3.3. A density check at 3.5 shows no pileup.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Inference Problem</div>
+      <div class="concept-body">
+        <p><strong>Estimand:</strong> Ideally the ATE, but the identification strategy will only get us a CATE near the existing cutoff: $E[Y^{(D=1)} - Y^{(D=0)} \mid Z = 3.5]$.</p>
+        <p><strong>Why causal?</strong> The decision is whether to extend treatment to a new group — counterfactual.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Identification & Estimator</div>
+      <div class="concept-body">
+        <p><strong>Identification:</strong> Sharp RDD. Assignment is deterministic at GPA $= 3.5$; potential outcomes continuous in GPA at the cutoff; density check rules out manipulation.</p>
+        <p><strong>Estimator:</strong> Local linear regression on each side of 3.5; difference of fitted values at the cutoff.</p>
+        <div class="formula-box">$\hat\delta_{3.5} = E_{\text{right}}[Y \mid Z=3.5] - E_{\text{left}}[Y \mid Z=3.5]$</div>
+        <p><strong>Caveat:</strong> extrapolating from CATE at 3.5 down to 3.3 needs a smoothness assumption — flag this for the provost.</p>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">L2.4: Minimum-Wage Policy (DID)</h2>
+  <div class="concept-grid">
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Business Problem</div>
+      <div class="concept-body">
+        <p>A state legislature is considering a minimum-wage hike after several nearby states raised their minimums last summer. <strong>Complication:</strong> the same treated states ended the federal pandemic UI supplement ($300/week) <em>six months before</em> the wage hike. Control states kept it until federal expiration. The early expiration plausibly tightened the low-wage labor market in treated states ahead of $t^*$.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Inference Problem</div>
+      <div class="concept-body">
+        <p><strong>Estimand:</strong> Causal ATT on the treated states: $E[Y^{(D=1)} - Y^{(D=0)} \mid D^* = 1, t > t^*]$.</p>
+        <p><strong>Why ATT, not ATE?</strong> Most defensible target with this design. We only have unbiased $Y^{(D=1)}$ for treated states; parallel trends identifies the counterfactual specifically for them.</p>
+      </div>
+    </div>
+    <div class="concept-card" onclick="toggleCard(this)">
+      <div class="concept-header">Identification & Estimator</div>
+      <div class="concept-body">
+        <p><strong>Identification:</strong> DID with parallel trends. Naive DID is biased: the early UI-supplement expiration created a low-wage employment trend in treated states ahead of $t^*$. Restore identification by conditioning on the time-varying control $X_{it} =$ per-state UI-supplement status by month.</p>
+        <div class="formula-box">$Y_{it} \sim \beta_0 + \beta_t t + \beta_D D^* + \beta_{DT}(t \cdot D^*) + \gamma X_{it}$</div>
+        <p>The treatment effect is $\beta_{DT}$.</p>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">Drill → Cell Mapping</h2>
+  <div class="card">
+    <table class="comparison-table">
+      <tr><th></th><th>No selection bias</th><th>Selection bias</th></tr>
+      <tr><td><strong>Statistical</strong></td><td>—</td><td>L1.1, L1.2 (s-bias); L1.3 (fails)</td></tr>
+      <tr><td><strong>Causal</strong></td><td>L2.1 (IV), L2.2 (FDC), L2.3 (RDD), L2.4 (DID)</td><td>(s-backdoor)</td></tr>
+    </table>
+    <p style="margin-top:12px;font-size:0.9rem;"><strong>Exam discipline:</strong> name the cell first, the method follows.</p>
   </div>
 </div>
 
