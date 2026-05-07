@@ -538,6 +538,13 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
     <p>$P(Y \mid do(X=x))$ is the <strong>interventional distribution</strong> &mdash; the distribution of $Y$ if we physically set $X=x$ for everyone. Graphically: delete all edges <em>into</em> $X$ and set $X=x$.</p>
     <p style="margin-top:8px">$P(Y \mid X=x)$ is the <strong>observational conditional</strong> &mdash; the distribution of $Y$ among units that happen to have $X=x$. This includes confounding.</p>
   </div>
+
+  <h2 class="section-title">Concrete Example: Job Training (NSW / LaLonde 1986)</h2>
+  <div class="card" style="border-left:3px solid rgba(34,197,94,0.7);">
+    <p>The National Supported Work program offered job training to disadvantaged workers. For a single trainee Maria, $Y_i^{(D=1)}$ is her earnings 18 months after training; $Y_i^{(D=0)}$ is what she <em>would</em> have earned without training. We see one but never both — the fundamental problem of causal inference.</p>
+    <p style="margin-top:8px;">The naive estimator $E[Y \mid D{=}1] - E[Y \mid D{=}0]$ compares trainees to <em>all</em> non-trainees and reports a <strong>negative</strong> effect. But trainees were unemployed and disadvantaged when they enrolled — they weren't comparable to the general workforce. The selection-bias term $E[Y^{(0)} \mid D{=}1] - E[Y^{(0)} \mid D{=}0]$ is large and negative: trainees would have earned less anyway. Once we control for baseline earnings and demographics, the ATT is positive and economically meaningful.</p>
+    <p style="margin-top:8px;font-size:0.88rem;color:var(--text-dim);"><strong>What this illustrates:</strong> we never see both potential outcomes for the same person; the naive estimator includes selection bias; ATT $\neq$ ATE when treatment is self-selected.</p>
+  </div>
 </div>
 
 <!-- ==================== LECTURE 2 ==================== -->
@@ -662,6 +669,14 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
       <tr><td>Collider: $X \to Z \leftarrow Y$</td><td>$X \perp Y$</td><td>$X \not\perp Y \mid Z$ (OPENS)</td></tr>
     </table>
   </div>
+
+  <h2 class="section-title">Concrete Example: Berkeley Graduate Admissions (1973)</h2>
+  <div class="card" style="border-left:3px solid rgba(34,197,94,0.7);">
+    <p>Berkeley was sued because women were admitted at a lower aggregate rate than men (35% vs 44%). Looking <em>within department</em>, women were admitted at <strong>equal or higher</strong> rates than men. Same data, opposite conclusion.</p>
+    <p style="margin-top:8px;">The graph: <em>Gender → Department → Admission</em>. Women applied disproportionately to humanities; men to engineering. Humanities had lower admit rates than engineering for everyone. <strong>Department is a fork on the back-door path</strong> Gender ← Department → Admission. Without conditioning on Department, the spurious gender→admission association is exposed; conditioning closes the back-door and the discriminatory signal disappears.</p>
+    <p style="margin-top:8px;"><strong>Bonus collider:</strong> in hospital data, smoking and car accidents are independent in the population, but among hospitalized patients they correlate negatively — Smoking → Hospital ← Accidents is a collider, and selecting on hospitalization opens the path. This is selection bias dressed as a graph.</p>
+    <p style="margin-top:8px;font-size:0.88rem;color:var(--text-dim);"><strong>What this illustrates:</strong> the fork building block creates Simpson's paradox; the collider building block creates selection-induced association.</p>
+  </div>
 </div>
 
 <!-- ==================== LECTURE 3 ==================== -->
@@ -746,6 +761,13 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
     <div class="formula-box">$\hat{\delta} = \sum_z \left(E_N[Y \mid X=1, Z=z] - E_N[Y \mid X=0, Z=z]\right) P_N(Z=z)$</div>
     <p><strong>Coarsening trade-off:</strong> Fine strata = less bias, more variance (sparse data per cell). Coarse strata = more bias (residual confounding), less variance (more data per cell).</p>
     <p style="margin-top:8px"><strong>Voter outreach example:</strong> County-level stratification (3000+ strata) was too fine with $N=2000$. State-level (50 strata) gave good estimates despite some residual confounding.</p>
+  </div>
+
+  <h2 class="section-title">Concrete Example: Elite College &amp; Earnings (Dale–Krueger 2002)</h2>
+  <div class="card" style="border-left:3px solid rgba(34,197,94,0.7);">
+    <p>Does attending an elite college <em>cause</em> higher lifetime earnings? Confounders include high-school GPA, SAT, family income, parents' education, <em>and unobserved motivation/ambition</em>. The back-door criterion says: find a $Z$ that blocks all paths $X \leftarrow \cdots \to Y$.</p>
+    <p style="margin-top:8px;">A naive controlled regression on observed covariates leaves an "elite premium" of ~7% — but motivation is still flowing through an unblocked back-door. Dale &amp; Krueger's clever fix: condition on the <strong>set of colleges a student applied to and was admitted to</strong>. Two students with the same admission set were similarly motivated and prepared, so the admission set acts as a near-perfect proxy for the unobserved confounder. <em>Within</em> admission-set strata, the elite-vs-non-elite earnings gap shrinks to near zero.</p>
+    <p style="margin-top:8px;font-size:0.88rem;color:var(--text-dim);"><strong>What this illustrates:</strong> the back-door criterion is a <em>graph</em> claim, not a data claim — domain knowledge supplies the graph; there's no statistical test for it; creative researchers find proxies that block paths through unmeasured confounders.</p>
   </div>
 </div>
 
@@ -969,6 +991,14 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
     <div id="psDistNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;">
       Drag the orange treated unit left/right to explore what happens when you match across different PS distances.
     </div>
+  </div>
+
+  <h2 class="section-title">Concrete Example: Right-Heart Catheterization (Connors et al. 1996)</h2>
+  <div class="card" style="border-left:3px solid rgba(34,197,94,0.7);">
+    <p>5,735 ICU patients; some catheterized (RHC), some not. The <strong>naive</strong> comparison: catheterized patients died <em>more</em> (38% vs 31%). But sicker patients were catheterized — confounding by indication.</p>
+    <p style="margin-top:8px;">Adjustment set $Z$: ~50 covariates (age, APACHE severity, lab values, primary diagnosis). Direct stratification was infeasible. The team used <strong>propensity-score matching</strong>: estimate $\hat e(Z) = P(\text{RHC} \mid Z)$ via logistic regression, then match each catheterized patient to a non-catheterized patient with similar $\hat e(Z)$. Patients with $\hat e(Z) > 0.95$ had no comparable controls and were excluded — a hard <em>positivity</em> failure that the propensity score made visible.</p>
+    <p style="margin-top:8px;">After matching, RHC <em>still</em> increased mortality by ~7 percentage points. The result drove practice change in critical-care medicine.</p>
+    <p style="margin-top:8px;font-size:0.88rem;color:var(--text-dim);"><strong>What this illustrates:</strong> high-dim $Z$ requires PSM rather than direct stratification; propensity scores expose positivity violations as a side effect; clean back-door analysis can overturn naive correlations.</p>
   </div>
 </div>
 
@@ -1234,6 +1264,14 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
     <canvas id="dmlCanvas" width="750" height="380" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
     <div id="dmlNarration" style="margin-top:12px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
   </div>
+
+  <h2 class="section-title">Concrete Example: Targeted Email Lift Estimation</h2>
+  <div class="card" style="border-left:3px solid rgba(34,197,94,0.7);">
+    <p>A retailer wants to know: did the personalized recommendation email increase purchases? Population: 2M users; 200K received the email. Treatment was assigned by an existing ML personalization model on rich features $Z$ — last-purchase recency, browsing behavior, demographics, lifetime value. Standard back-door conditioning on $Z$ is identified, but $Z$ is high-dimensional.</p>
+    <p style="margin-top:8px;"><strong>IPW route:</strong> fit $\hat e(Z) = P(\text{email} \mid Z)$ via gradient boosting. Reweight each treated user by $1/\hat e(Z_i)$ and each control by $1/(1-\hat e(Z_i))$. Trim weights at $\hat e \in (0.05, 0.95)$ to avoid blow-up. The weighted ATE estimates lift.</p>
+    <p style="margin-top:8px;"><strong>Double ML route:</strong> 5-fold split. On each held-out fold, predict $\hat g(Z) = E[Y \mid Z]$ with XGBoost and $\hat m(Z) = P(D \mid Z)$ with another model. Compute residuals $\tilde Y = Y - \hat g(Z)$, $\tilde D = D - \hat m(Z)$, then OLS $\tilde Y$ on $\tilde D$. Coefficient gives valid $\sqrt n$ inference even with ML nuisances — Neyman orthogonality protects against ML's regularization bias.</p>
+    <p style="margin-top:8px;font-size:0.88rem;color:var(--text-dim);"><strong>What this illustrates:</strong> IPW handles high-dim $Z$ that stratification can't; Double ML lets you use ML for nuisance functions while still getting standard CIs for the causal parameter.</p>
+  </div>
 </div>
 
 <!-- ==================== LECTURE 6 ==================== -->
@@ -1410,6 +1448,14 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
       <strong style="color:rgba(245,158,11,0.9);">Sensitivity Analysis</strong> &mdash; Stress-test: how strong must a hidden confounder be to kill the effect?
     </div>
   </div>
+
+  <h2 class="section-title">Concrete Example: Hormone Replacement Therapy (1990s vs WHI 2002)</h2>
+  <div class="card" style="border-left:3px solid rgba(34,197,94,0.7);">
+    <p>Throughout the 1990s, the Nurses' Health Study and other observational studies showed HRT users had <strong>~50% lower</strong> cardiovascular events than non-users. Doctors prescribed HRT widely for heart-disease prevention.</p>
+    <p style="margin-top:8px;">In 2002, the Women's Health Initiative — a large RCT — found HRT <em>increased</em> cardiovascular events. The observational result was <strong>wrong by sign</strong>. What confounder did the studies miss? The <em>healthy-user effect</em>: women who started HRT were more health-conscious in many other ways (diet, exercise, screening, SES) than non-users.</p>
+    <p style="margin-top:8px;">A retrospective sensitivity analysis on the original studies asks: how strong would the unmeasured confounder need to be to explain away the observed correlation? Estimates suggest a confounder $U$ with effect ~0.3 on selection and ~0.4 on outcome — about the magnitude of "is this person a regular exerciser?" — was sufficient. The <strong>breakdown point was small</strong>, and the result should have been flagged as fragile <em>before</em> the RCT contradicted it.</p>
+    <p style="margin-top:8px;font-size:0.88rem;color:var(--text-dim);"><strong>What this illustrates:</strong> graphs can be wrong; sensitivity analysis quantifies how wrong they're allowed to be; a small breakdown point is a warning sign even when the point estimate is large.</p>
+  </div>
 </div>
 
 <!-- ==================== LECTURE 7: INSTRUMENTAL VARIABLES ==================== -->
@@ -1553,6 +1599,15 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
     </div>
     <canvas id="ivCanvas" width="750" height="620" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
     <div id="ivNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+  </div>
+
+  <h2 class="section-title">Concrete Example: Quarter of Birth &amp; Returns to Schooling (Angrist–Krueger 1991)</h2>
+  <div class="card" style="border-left:3px solid rgba(34,197,94,0.7);">
+    <p>Effect of years of schooling ($D$) on log earnings ($Y$). Standard OLS gives 7–9% return per year, but ability and motivation $U$ confound: more capable people get more schooling <em>and</em> earn more independently.</p>
+    <p style="margin-top:8px;"><strong>The instrument:</strong> quarter of birth ($Z$). US compulsory-schooling laws kicked in at age 16. A student born in Q1 starts school at ~6.75 years old and reaches 16 with fewer years of schooling than a Q4-born student who starts at ~6. Q1-borns end up with about 0.1 fewer years of schooling. Quarter of birth is plausibly random with respect to ability — exactly the exclusion-restriction story we need.</p>
+    <p style="margin-top:8px;">Wald: $\hat\delta = (\bar Y_{Q4} - \bar Y_{Q1}) / (\bar D_{Q4} - \bar D_{Q1}) \approx 0.01 / 0.1 = 0.10$. About <strong>10% return per year</strong> — slightly higher than OLS, opposite of what you'd expect if ability bias inflated OLS upward.</p>
+    <p style="margin-top:8px;"><strong>Caveats:</strong> Bound, Jaeger &amp; Baker (1995) showed the first stage was weak — small $\mathrm{Cov}(D, Z)$ amplifies any leakage of $Z$ directly into $Y$ (e.g., season-of-birth health effects). And the LATE applies only to <strong>compliers</strong>: students whose schooling was actually pushed by compulsory-schooling laws — typically lower-income students near the dropout margin. Generalizing to all students requires extra assumptions.</p>
+    <p style="margin-top:8px;font-size:0.88rem;color:var(--text-dim);"><strong>What this illustrates:</strong> the exclusion restriction (untestable, debated for QoB); weak-instrument bias amplification; LATE on a specific complier subpopulation, not the full ATE.</p>
   </div>
 </div>
 
@@ -1708,6 +1763,22 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
     </div>
     <canvas id="abCanvas" width="750" height="340" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
     <div id="abNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+  </div>
+
+  <h2 class="section-title">Concrete Example: Smoking → Tar → Cancer (Pearl's Front-Door)</h2>
+  <div class="card" style="border-left:3px solid rgba(34,197,94,0.7);">
+    <p>In the 1950s, tobacco companies argued the smoking–cancer correlation was confounded by a hypothetical "smoking gene" $U$: $U \to$ smoking and $U \to$ cancer. We can't measure $U$. But suppose we can measure <strong>tar deposits</strong> in lung tissue ($Z$).</p>
+    <p style="margin-top:8px;">Verify the FDC for $X = $ smoking, $Y = $ cancer, $Z = $ tar:</p>
+    <ol>
+      <li><strong>$Z$ intercepts $X \to Y$:</strong> tar deposits sit on every causal path from smoking to lung cancer (assumed mechanism — biologically plausible). ✓</li>
+      <li><strong>No back-door $X \to Z$:</strong> the smoking gene doesn't cause tar directly — only via smoking. ✓</li>
+      <li><strong>Back-doors $Z \to Y$ blocked by $X$:</strong> smoking is the only common cause of tar and cancer; conditioning on $X$ closes the path. ✓</li>
+    </ol>
+    <p style="margin-top:8px;">FDC adjustment then identifies $P(\text{cancer} \mid \mathrm{do}(\text{smoking}))$ from purely observational data — no need to measure $U$. This was Pearl's killing argument: even if the smoking gene exists, the front-door identifies the causal effect.</p>
+
+    <h4 style="color:var(--accent);margin-top:14px;">Companion: novelty effect in A/B testing</h4>
+    <p>A streaming service tested a new recommendation algorithm. Day 1: <strong>+12%</strong> engagement (test vs control). Day 30: <strong>+3%</strong>. The decision depends on which number you trust. The 12% is novelty (exploration); the 3% is steady-state. The honest A/B report uses the post-stabilization number and flags the trajectory.</p>
+    <p style="margin-top:8px;font-size:0.88rem;color:var(--text-dim);"><strong>What this illustrates:</strong> FDC identifies $P(Y \mid \mathrm{do}(X))$ via a fully-observed mediator when the back-door fails; A/B tests must run long enough for time-varying effects to stabilize.</p>
   </div>
 </div>
 
@@ -1871,6 +1942,21 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
     </div>
     <canvas id="didCanvas" width="750" height="340" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
     <div id="didNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+  </div>
+
+  <h2 class="section-title">Concrete Examples: Card–Krueger DID, Thistlethwaite RDD, California Prop 13 ITS</h2>
+  <div class="card" style="border-left:3px solid rgba(34,197,94,0.7);">
+    <h4 style="color:var(--accent);">DID — Card &amp; Krueger (1994), NJ minimum wage</h4>
+    <p>In April 1992, New Jersey raised its state minimum wage from $4.25 to $5.05; Pennsylvania kept $4.25. Card and Krueger surveyed fast-food restaurants in NJ and PA <em>border counties</em> before (Feb–Mar) and after (Nov–Dec) the change. DID:</p>
+    <div class="formula-box">$\hat\delta = (\bar Y_{NJ,\text{after}} - \bar Y_{NJ,\text{before}}) - (\bar Y_{PA,\text{after}} - \bar Y_{PA,\text{before}})$</div>
+    <p>Result: NJ employment <em>increased</em> by ~0.6 workers per restaurant relative to PA — contradicting the naive supply-demand prediction. Parallel trends was credible because NJ and PA border counties shared regional shocks.</p>
+
+    <h4 style="color:var(--accent);margin-top:14px;">RDD — Thistlethwaite &amp; Campbell (1960), original RD paper</h4>
+    <p>National Merit Scholarship awards were assigned by a sharp test-score cutoff. Students one point above received a Certificate of Merit; students one point below didn't. Compare college outcomes for students at $\text{score} = c+1$ vs $\text{score} = c-1$. Local linear regression on each side, evaluated at $c$, gives the CATE at the cutoff. The famous "as-if random" intuition: at the boundary, who got the certificate is essentially a coin flip.</p>
+
+    <h4 style="color:var(--accent);margin-top:14px;">ITS — California Proposition 13 (1978)</h4>
+    <p>Prop 13 capped property taxes, slashing local school revenue. Pre-1978 trend in per-pupil spending: rising 4%/yr. Post-1978: <em>flat</em> for 3 years, then resumed at 2%/yr. ITS effect = observed post-period minus extrapolated pre-trend. Caveat: anything else statewide that changed in 1978 would confound this — and it's a single unit, no control group.</p>
+    <p style="margin-top:8px;font-size:0.88rem;color:var(--text-dim);"><strong>What this illustrates:</strong> DID isolates a treatment effect by differencing out time-invariant confounding (parallel trends); RDD exploits a deterministic threshold for "as-if random" assignment locally; ITS extrapolates the counterfactual from a single unit's history when no comparison group exists.</p>
   </div>
 </div>
 
@@ -2069,6 +2155,18 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
   <div class="highlight-box">
     <strong>When adjustment fails:</strong> if selection $S$ is on a <em>descendant of the outcome</em> (e.g. a 30-second dwell-time filter where engaged users dwell longer <em>and</em> buy more), no reweighting on observed covariates can recover $P(Y \mid X)$. The fix is upstream — remove the filter at the data source — not a clever weighting scheme.
   </div>
+
+  <h2 class="section-title">Concrete Examples: Prop 99 Synthetic Control + 2016 Polling Bias</h2>
+  <div class="card" style="border-left:3px solid rgba(34,197,94,0.7);">
+    <h4 style="color:var(--accent);">Synthetic control — California Proposition 99 (1988)</h4>
+    <p>California's 1988 cigarette tax raised prices and bundled anti-smoking ads. Did per-capita cigarette sales fall <em>because</em> of the policy? The clever construction: build a "synthetic California" as a weighted combination of <em>other</em> states (Utah, Nevada, Montana, Connecticut, Colorado) chosen so the synthetic series matches California's pre-1988 sales trajectory. After 1988, real and synthetic California diverge — by 2000, real CA sells ~26 packs/person/year vs synthetic CA's ~60. Estimated effect: −34 packs/person.</p>
+    <p style="margin-top:8px;">MC-NNM generalizes this: instead of restricting weights to convex combinations of donor states, let nuclear-norm minimization fill in the missing $Y^{(D=0)}$ entries directly. This handles staggered adoption (different states implement different policies at different times) without specifying donor pools by hand.</p>
+
+    <h4 style="color:var(--accent);margin-top:14px;">Selection bias — 2016 election polling</h4>
+    <p>Most major polls in October 2016 had Clinton up by 3–4 points. Trump won the Electoral College. <em>Why did the polls miss?</em> Online polls and even RDD telephone polls over-represented college-educated, urban respondents. Many pollsters did weight by age and region — but missed the <strong>college / non-college divide within white voters</strong>, which had become the dominant predictor of vote choice. The right method (post-stratification) was applied to the wrong covariate set $C$.</p>
+    <p style="margin-top:8px;">Formula reminder: $\hat E[\text{vote share}] = \sum_c E[\text{vote} \mid C=c, S=1]\, P(C=c)$, with marginals $P(C)$ from a voter file. The result is only as good as $C$ — if $S$ depends on a variable not in $C$, you can't fix the bias.</p>
+    <p style="margin-top:8px;font-size:0.88rem;color:var(--text-dim);"><strong>What this illustrates:</strong> matrix completion handles staggered, partially-observed potential outcomes with a structural assumption (low rank); s-bias adjustment fixes selection only if $C$ separates $S$ from $Y$ — picking the wrong $C$ gives confidently wrong answers.</p>
+  </div>
 </div>
 
 <!-- ==================== ESTIMAND SELECTION ==================== -->
@@ -2135,6 +2233,14 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
       <tr><td>ATT in observational data</td><td>Common support fails for some treated units</td><td>ATT on the overlap region</td></tr>
     </table>
     <p style="margin-top:8px;font-size:0.9rem;">Each fallback narrows the population the answer applies to. Be explicit about it when reporting — "the effect on compliers near the cutoff" is a much more honest claim than "the effect."</p>
+  </div>
+
+  <h2 class="section-title">Concrete Example: Google Flu Trends (2008–2014)</h2>
+  <div class="card" style="border-left:3px solid rgba(34,197,94,0.7);">
+    <p>Google built a model predicting CDC flu cases from search-query volume — type "flu symptoms" or "what to take for fever," and the model added you to its estimate. From 2008 to 2012 it tracked the CDC numbers within ~2%, faster than the CDC itself. Then in January 2013, GFT predicted <strong>11%</strong> of the population had flu; the CDC measured <strong>6%</strong>. GFT had nearly doubled the right answer.</p>
+    <p style="margin-top:8px;"><strong>What broke:</strong> the relationship between search volume and flu prevalence wasn't structural — it was confounded by media coverage. In 2013, heavy news coverage of a bad flu season inflated search queries far above what people's actual flu prevalence implied. The OLS coefficient absorbed both the structural signal (sick people search more) <em>and</em> the media-driven amplification.</p>
+    <p style="margin-top:8px;">A causal forecast would have separated $P(\text{search} \mid \text{flu}, \mathrm{do}(\text{media coverage}))$ from $P(\text{search} \mid \text{flu})$. The structural mechanism stayed stable; only the exogenous distribution of media changed. Statistical models are vulnerable to this kind of <strong>shift</strong> — structural models aren't.</p>
+    <p style="margin-top:8px;font-size:0.88rem;color:var(--text-dim);"><strong>What this illustrates:</strong> the second of the three red flags — when exogenous distributions drift but structural equations are stable, regression coefficients don't transfer; structural parameters do. Choose the causal estimand even for a forecasting problem if the regime can shift.</p>
   </div>
 </div>
 
