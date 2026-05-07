@@ -1650,9 +1650,9 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
         <p style="font-size:0.92rem;"><em>Graph: $X \to Z_1 \to Y$, $X \to Z_2 \to Y$, $U \to X$, $U \to Y$. Take $Z = \{Z_1, Z_2\}$.</em></p>
         <table class="comparison-table" style="margin-top:8px;font-size:0.84rem;">
           <tr><th>Condition</th><th>Paths to check</th><th>Why it holds</th></tr>
-          <tr><td>1. Intercepts $X \to Y$</td><td>$X \to Z_1 \to Y$; $X \to Z_2 \to Y$</td><td>$Z_1$ blocks the first; $Z_2$ blocks the second.</td></tr>
-          <tr><td>2. No open back-door $X \to Z$</td><td>$X \leftarrow U \to Y \leftarrow Z_1$; $X \leftarrow U \to Y \leftarrow Z_2$</td><td>Collider at $Y$ blocks both paths automatically. (Generally true for a mechanism.)</td></tr>
-          <tr><td>3. Back-doors $Z \to Y$ blocked by $X$</td><td>$Z_1 \leftarrow X \to Z_2 \to Y$ and three other forks/chains through $X$</td><td>$X$ is a fork or chain node on all paths; conditioning on $X$ blocks them.</td></tr>
+          <tr><td>1. Intercepts directed $X \to Y$ paths</td><td>$X \to Z_1 \to Y$; $X \to Z_2 \to Y$</td><td>$Z_1$ blocks the first; $Z_2$ blocks the second.</td></tr>
+          <tr><td>2. No open back-door from $X$ to $Z$</td><td>$X \leftarrow U \to Y \leftarrow Z_1$; $X \leftarrow U \to Y \leftarrow Z_2$</td><td>Collider at $Y$ blocks both. <em>This works because the graph has no $U \to Z$ edge — adding one would make $X \leftarrow U \to Z$ an unblocked back-door and condition 2 would fail.</em></td></tr>
+          <tr><td>3. Back-doors from $Z$ to $Y$ blocked by $X$</td><td>$Z_1 \leftarrow X \to Z_2 \to Y$ and three other forks/chains through $X$</td><td>$X$ is a fork or chain node on all paths; conditioning on $X$ blocks them.</td></tr>
         </table>
       </div>
     </div>
