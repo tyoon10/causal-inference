@@ -1647,13 +1647,66 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
     <div class="concept-card" onclick="toggleCard(this)">
       <div class="concept-header">Worked Example: Two Mediators <span class="badge badge-method">Example</span></div>
       <div class="concept-body">
-        <p style="font-size:0.92rem;"><em>Graph: $X \to Z_1 \to Y$, $X \to Z_2 \to Y$, $U \to X$, $U \to Y$. Take $Z = \{Z_1, Z_2\}$.</em></p>
-        <table class="comparison-table" style="margin-top:8px;font-size:0.84rem;">
-          <tr><th>Condition</th><th>Paths to check</th><th>Why it holds</th></tr>
-          <tr><td>1. Intercepts directed $X \to Y$ paths</td><td>$X \to Z_1 \to Y$; $X \to Z_2 \to Y$</td><td>$Z_1$ blocks the first; $Z_2$ blocks the second.</td></tr>
-          <tr><td>2. No open back-door from $X$ to $Z$</td><td>$X \leftarrow U \to Y \leftarrow Z_1$; $X \leftarrow U \to Y \leftarrow Z_2$</td><td>Collider at $Y$ blocks both. <em>This works because the graph has no $U \to Z$ edge — adding one would make $X \leftarrow U \to Z$ an unblocked back-door and condition 2 would fail.</em></td></tr>
-          <tr><td>3. Back-doors from $Z$ to $Y$ blocked by $X$</td><td>$Z_1 \leftarrow X \to Z_2 \to Y$ and three other forks/chains through $X$</td><td>$X$ is a fork or chain node on all paths; conditioning on $X$ blocks them.</td></tr>
-        </table>
+        <p style="font-size:0.92rem;"><em>Treatment $X$ acts on outcome $Y$ through two parallel mediators $Z_1$ and $Z_2$. An unobserved confounder $U$ affects both $X$ and $Y$ but does not reach $Z$ except through $X$. Take $Z = \{Z_1, Z_2\}$ — does it satisfy the FDC?</em></p>
+
+        <div style="display:flex;justify-content:center;margin:14px 0 8px;">
+          <svg viewBox="0 0 460 490" style="width:100%;max-width:440px;height:auto;display:block;">
+            <!-- Forward edges (solid, accent color via .edge class) -->
+            <line class="edge" x1="84" y1="185" x2="196" y2="115"/>
+            <line class="edge" x1="84" y1="215" x2="196" y2="285"/>
+            <line class="edge" x1="244" y1="115" x2="356" y2="185"/>
+            <line class="edge" x1="244" y1="285" x2="356" y2="215"/>
+
+            <!-- Confounder edges (dashed amber, unobserved) -->
+            <line x1="203" y1="388" x2="77" y2="222"
+                  stroke="rgba(245,158,11,0.7)" stroke-width="2" stroke-dasharray="6,4"
+                  marker-end="url(#arrowhead)"/>
+            <line x1="237" y1="388" x2="363" y2="222"
+                  stroke="rgba(245,158,11,0.7)" stroke-width="2" stroke-dasharray="6,4"
+                  marker-end="url(#arrowhead)"/>
+
+            <!-- Nodes -->
+            <circle class="node node-treatment" cx="60" cy="200" r="28"/>
+            <text x="60" y="206" text-anchor="middle" font-weight="600" font-size="18">X</text>
+
+            <circle class="node" cx="220" cy="100" r="28"/>
+            <text x="220" y="106" text-anchor="middle" font-weight="600" font-size="16">Z₁</text>
+
+            <circle class="node" cx="220" cy="300" r="28"/>
+            <text x="220" y="306" text-anchor="middle" font-weight="600" font-size="16">Z₂</text>
+
+            <circle class="node node-outcome" cx="380" cy="200" r="28"/>
+            <text x="380" y="206" text-anchor="middle" font-weight="600" font-size="18">Y</text>
+
+            <circle class="node node-confounder" cx="220" cy="410" r="28"
+                    stroke-dasharray="5,4"/>
+            <text x="220" y="416" text-anchor="middle" font-weight="600" font-size="18" font-style="italic">U</text>
+            <text x="220" y="460" text-anchor="middle" font-size="11" fill="rgba(245,158,11,0.85)">unobserved</text>
+
+            <!-- Edge legend -->
+            <line x1="320" y1="445" x2="345" y2="445" stroke="var(--text-dim)" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <text x="350" y="449" font-size="10" fill="var(--text-dim)">causal</text>
+            <line x1="320" y1="465" x2="345" y2="465" stroke="rgba(245,158,11,0.7)" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrowhead)"/>
+            <text x="350" y="469" font-size="10" fill="rgba(245,158,11,0.85)">confounding</text>
+          </svg>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">
+          <div style="padding:10px 14px;border-left:3px solid rgba(34,197,94,0.7);background:rgba(34,197,94,0.06);border-radius:0 6px 6px 0;font-size:0.9rem;">
+            <strong style="color:rgba(34,197,94,0.95);">✓ 1. $Z$ intercepts all directed $X \to Y$ paths.</strong>
+            <p style="margin-top:4px;">Trace forward: every solid arrow from $X$ to $Y$ passes through $Z_1$ or $Z_2$ — namely $X \to Z_1 \to Y$ and $X \to Z_2 \to Y$.</p>
+          </div>
+          <div style="padding:10px 14px;border-left:3px solid rgba(34,197,94,0.7);background:rgba(34,197,94,0.06);border-radius:0 6px 6px 0;font-size:0.9rem;">
+            <strong style="color:rgba(34,197,94,0.95);">✓ 2. No open back-door from $X$ to $Z$.</strong>
+            <p style="margin-top:4px;">Back-door paths from $X$ must start by going up the dashed $X \leftarrow U$ edge. The only routes that reach $Z$ are $X \leftarrow U \to Y \leftarrow Z_1$ and $X \leftarrow U \to Y \leftarrow Z_2$ — both blocked by the collider at $Y$. <em>This works because there's no $U \to Z$ edge in the graph; if you added one, $X \leftarrow U \to Z$ would be an unblocked back-door and condition 2 would fail.</em></p>
+          </div>
+          <div style="padding:10px 14px;border-left:3px solid rgba(34,197,94,0.7);background:rgba(34,197,94,0.06);border-radius:0 6px 6px 0;font-size:0.9rem;">
+            <strong style="color:rgba(34,197,94,0.95);">✓ 3. All back-doors from $Z$ to $Y$ are blocked by $X$.</strong>
+            <p style="margin-top:4px;">From $Z_1$, back-door paths are $Z_1 \leftarrow X \to Z_2 \to Y$ and $Z_1 \leftarrow X \leftarrow U \to Y$ (and symmetrically for $Z_2$). $X$ sits as a fork or chain node on every one of them — conditioning on $X$ blocks them all.</p>
+          </div>
+        </div>
+
+        <p style="margin-top:12px;font-size:0.88rem;color:var(--text-dim);">All three conditions hold $\Rightarrow$ FDC adjustment via $\{Z_1, Z_2\}$ identifies $P(Y \mid \mathrm{do}(X))$ even though $U$ is never measured.</p>
       </div>
     </div>
     <div class="concept-card" onclick="toggleCard(this)">
