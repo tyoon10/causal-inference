@@ -32,10 +32,13 @@ A self-contained HTML application with interactive visualizations covering:
 
 ## Features
 
-- Interactive canvas visualizations (propensity score overlap, PS sufficiency, IPW vs BDA, breakdown point, IV path decomposition, A/B time-varying effects, RD bandwidth, DID violations, matrix completion, regime shift)
-- KaTeX-rendered math formulas
+- Interactive canvas visualizations (propensity score overlap, PS sufficiency, IPW vs BDA, breakdown point, IV path decomposition, A/B time-varying effects, RD bandwidth, DID violations, matrix completion, regime shift) — responsive, HiDPI-sharp, touch-friendly
+- KaTeX-rendered math formulas (lazily typeset per tab)
 - Expandable concept cards with tags (strengths, weaknesses, assumptions)
-- Practice problems with reveal/hide answers
+- Practice problems with reveal/hide answers and persistent self-grading (got it / missed it, "show missed only" filter)
+- **Ctrl+K / `/` search palette** across every concept card, section, and practice question in all 15 tabs
+- Per-lecture color identity, deep-linkable tabs (`#l7`, `#l9`, …), per-tab scroll memory, prev/next lecture navigation, floating table of contents
+- Resume where you left off (last tab and quiz grades persist in localStorage)
 - Fully self-contained — no build step, no dependencies, just open the HTML file
 
 ## Usage

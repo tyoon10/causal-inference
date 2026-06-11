@@ -4,117 +4,287 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Causal Inference Study Module — Final Exam</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5/400.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5/500.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5/600.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5/700.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk@5/500.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk@5/700.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/500.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
-  onload="renderMathInElement(document.body, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+  onload="window.__katexReady=true;if(window.renderPanelMath)renderPanelMath(document.querySelector('.tab-panel.active'));"></script>
 <style>
 :root {
-  --bg: #0f1117;
+  --bg: #0d0f16;
+  --bg2: #12141f;
   --card: #1a1d2e;
   --card-hover: #222640;
   --accent: #6c63ff;
   --accent2: #00d2ff;
   --accent3: #ff6b9d;
-  --text: #e4e4e7;
-  --text-dim: #9ca3af;
+  --accent-text: #8e87ff;
+  --text: #e6e7ec;
+  --text-dim: #a3aab8;
   --border: #2d3148;
   --success: #22c55e;
   --warn: #f59e0b;
   --danger: #ef4444;
   --radius: 12px;
+  --h: 248;
+  --pa: hsl(var(--h) 86% 71%);
+  --pa-strong: hsl(var(--h) 75% 60%);
+  --pa-soft: hsl(var(--h) 86% 66% / .13);
+  --pa-line: hsl(var(--h) 86% 66% / .30);
+  --pa-glow: hsl(var(--h) 86% 58% / .22);
+  --font-body: 'Inter', system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
+  color-scheme: dark;
 }
+
+/* Per-lecture hue identity */
+.tab[data-tab="overview"], #panel-overview { --h: 248; }
+.tab[data-tab="l1"],  #panel-l1  { --h: 262; }
+.tab[data-tab="l2"],  #panel-l2  { --h: 222; }
+.tab[data-tab="l3"],  #panel-l3  { --h: 199; }
+.tab[data-tab="l4"],  #panel-l4  { --h: 173; }
+.tab[data-tab="l5"],  #panel-l5  { --h: 152; }
+.tab[data-tab="l6"],  #panel-l6  { --h: 38; }
+.tab[data-tab="l7"],  #panel-l7  { --h: 22; }
+.tab[data-tab="l8"],  #panel-l8  { --h: 350; }
+.tab[data-tab="l9"],  #panel-l9  { --h: 322; }
+.tab[data-tab="l10"], #panel-l10 { --h: 282; }
+.tab[data-tab="estimand"], #panel-estimand { --h: 200; }
+.tab[data-tab="drills"],   #panel-drills   { --h: 45; }
+.tab[data-tab="methods"],  #panel-methods  { --h: 175; }
+.tab[data-tab="practice"], #panel-practice { --h: 265; }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+html { scroll-behavior: smooth; }
+
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: var(--bg);
+  font-family: var(--font-body);
+  background:
+    radial-gradient(900px 600px at 85% -10%, rgba(108,99,255,0.10), transparent 60%),
+    radial-gradient(700px 500px at -10% 25%, rgba(0,210,255,0.055), transparent 60%),
+    radial-gradient(800px 600px at 50% 115%, rgba(255,107,157,0.05), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
   color: var(--text);
-  line-height: 1.6;
+  line-height: 1.65;
   min-height: 100vh;
 }
 
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 28px 28px;
+  -webkit-mask-image: radial-gradient(ellipse 85% 60% at 50% 0%, #000 25%, transparent 75%);
+  mask-image: radial-gradient(ellipse 85% 60% at 50% 0%, #000 25%, transparent 75%);
+}
+
+::selection { background: rgba(108,99,255,0.4); color: #fff; }
+
+* { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+::-webkit-scrollbar { width: 10px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; border: 2px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover { background: #3d4263; }
+
+:focus-visible { outline: 2px solid var(--accent2); outline-offset: 2px; border-radius: 4px; }
+
 .header {
-  background: linear-gradient(135deg, #1a1d2e 0%, #0f1117 100%);
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(26,29,46,0.85) 0%, rgba(13,15,22,0.6) 100%);
   border-bottom: 1px solid var(--border);
-  padding: 20px 32px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  backdrop-filter: blur(10px);
+  padding: 22px 32px 18px;
 }
 
 .header h1 {
-  font-size: 1.5rem;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
   font-weight: 700;
+  letter-spacing: -0.02em;
+  width: fit-content;
+  background: linear-gradient(120deg, #8b85ff, #00d2ff 45%, #ff6b9d 90%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 
-.header .subtitle { color: var(--text-dim); font-size: 0.85rem; margin-top: 2px; }
+@media (prefers-reduced-motion: no-preference) {
+  .header h1 { animation: titleSheen 14s linear infinite alternate; }
+  @keyframes titleSheen { to { background-position: 100% 0; } }
+}
+
+.header .subtitle { color: var(--text-dim); font-size: 0.85rem; margin-top: 3px; }
+
+.header .dag-motif {
+  position: absolute;
+  right: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.pill-link {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 5px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text-dim);
+  font-size: 13px;
+  text-decoration: none;
+  transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+.pill-link:hover { border-color: var(--accent); color: var(--accent-text); box-shadow: 0 0 14px -6px var(--accent); }
 
 .tabs {
+  position: sticky;
+  top: 0;
+  z-index: 100;
   display: flex;
-  gap: 4px;
-  padding: 12px 32px 0;
-  background: var(--bg);
+  align-items: flex-end;
+  gap: 2px;
+  padding: 8px 24px 0;
+  background: rgba(13,15,22,0.78);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
   border-bottom: 1px solid var(--border);
   overflow-x: auto;
-  scrollbar-width: thin;
+  scrollbar-width: none;
 }
+.tabs::-webkit-scrollbar { display: none; }
 
 .tab {
-  padding: 10px 18px;
+  position: relative;
+  padding: 10px 14px;
   border: none;
   background: transparent;
   color: var(--text-dim);
   cursor: pointer;
   font-size: 0.85rem;
   font-weight: 500;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
+  border-radius: 8px 8px 0 0;
+  transition: color 0.2s, background 0.2s;
   white-space: nowrap;
   font-family: inherit;
 }
 
-.tab:hover { color: var(--text); background: rgba(108,99,255,0.08); }
-.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab:hover { color: var(--text); background: var(--pa-soft); }
+.tab.active { color: var(--pa); background: var(--pa-soft); }
+.tab.exam-scope::after {
+  content: '';
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent3);
+  margin-left: 6px;
+  vertical-align: 2px;
+}
 
-.content { max-width: 1100px; margin: 0 auto; padding: 24px 32px 60px; }
+.tab-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 2px;
+  width: 0;
+  border-radius: 2px 2px 0 0;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  box-shadow: 0 0 10px var(--accent);
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tab-indicator { transition: transform 0.28s cubic-bezier(.4,0,.2,1), width 0.28s cubic-bezier(.4,0,.2,1); }
+}
+
+.content { max-width: 1100px; margin: 0 auto; padding: 28px 32px 80px; }
 
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
 
+@media (prefers-reduced-motion: no-preference) {
+  .tab-panel.active { animation: panelIn 0.3s cubic-bezier(.16,1,.3,1) both; }
+  @keyframes panelIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: none; }
+  }
+}
+
 .section-title {
-  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-display);
+  font-size: 1.32rem;
   font-weight: 700;
-  margin: 32px 0 16px;
+  letter-spacing: -0.01em;
+  margin: 38px 0 16px;
   color: var(--text);
+  scroll-margin-top: 70px;
+}
+
+.section-title::before {
+  content: '';
+  width: 4px;
+  height: 1.1em;
+  flex-shrink: 0;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--pa), transparent);
+  box-shadow: 0 0 12px var(--pa-glow);
+}
+
+.section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--border), transparent);
 }
 
 .section-title:first-child { margin-top: 8px; }
 
-.card {
-  background: var(--card);
+.card, .quiz-card, .flowchart, .graph-container {
+  background: linear-gradient(180deg, #1c2033 0%, #171a29 100%);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.045), 0 10px 28px -18px rgba(0,0,0,0.7);
+}
+
+.card {
   padding: 20px 24px;
   margin-bottom: 16px;
-  transition: border-color 0.2s;
+  transition: border-color 0.25s, box-shadow 0.25s;
 }
 
-.card:hover { border-color: rgba(108,99,255,0.3); }
+.card:hover {
+  border-color: var(--pa-line);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 14px 36px -16px var(--pa-glow);
+}
 
 .card h3 {
-  font-size: 1rem;
+  font-size: 1.08rem;
   font-weight: 600;
   margin-bottom: 10px;
-  color: var(--accent2);
+  color: var(--pa);
 }
 
-.card p, .card li { color: var(--text); font-size: 0.92rem; }
+.card h4 { font-size: 0.95rem; font-weight: 600; margin: 12px 0 6px; color: var(--text); }
+
+.card p, .card li { color: var(--text); font-size: 0.92rem; max-width: 76ch; }
 .card ul, .card ol { padding-left: 20px; margin: 8px 0; }
 .card li { margin: 4px 0; }
 
@@ -126,64 +296,96 @@ body {
 }
 
 .concept-card {
-  background: var(--card);
+  background: linear-gradient(180deg, #1c2033 0%, #171a29 100%);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.2s;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.045), 0 10px 28px -18px rgba(0,0,0,0.7);
+  transition: border-color 0.25s, transform 0.2s, box-shadow 0.25s;
 }
 
-.concept-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.concept-card:hover {
+  border-color: var(--pa-line);
+  transform: translateY(-2px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 16px 36px -14px var(--pa-glow);
+}
+
+.concept-card.open {
+  border-color: var(--pa-line);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px var(--pa-line), 0 0 28px -10px var(--pa-glow);
+}
 
 .concept-header {
   padding: 14px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
   font-weight: 600;
   font-size: 0.92rem;
 }
 
+.concept-header::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-right: 2px solid var(--text-dim);
+  border-bottom: 2px solid var(--text-dim);
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform 0.3s;
+}
+.concept-card.open .concept-header::after { transform: rotate(225deg) translateY(-1px); }
+
 .concept-header .badge {
-  font-size: 0.72rem;
-  padding: 2px 8px;
+  font-size: 0.7rem;
+  padding: 2px 9px;
   border-radius: 20px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-left: auto;
 }
 
-.badge-core { background: rgba(108,99,255,0.2); color: var(--accent); }
-.badge-method { background: rgba(0,210,255,0.2); color: var(--accent2); }
-.badge-warning { background: rgba(245,158,11,0.2); color: var(--warn); }
-.badge-exam { background: rgba(255,107,157,0.2); color: var(--accent3); }
+.badge-core { background: rgba(108,99,255,0.18); color: var(--accent-text); }
+.badge-method { background: rgba(0,210,255,0.16); color: var(--accent2); }
+.badge-warning { background: rgba(245,158,11,0.16); color: var(--warn); }
+.badge-exam { background: rgba(255,107,157,0.16); color: var(--accent3); }
 
 .concept-body {
-  padding: 0 18px 16px;
-  display: none;
+  display: grid;
+  grid-template-rows: 0fr;
+  padding: 0 18px;
   font-size: 0.88rem;
   color: var(--text);
   line-height: 1.7;
-  overflow-x: auto;
 }
-
-.concept-card.open .concept-body { display: block; }
-.concept-card.open { border-color: var(--accent); }
+@media (prefers-reduced-motion: no-preference) {
+  .concept-body { transition: grid-template-rows 0.35s cubic-bezier(.4,0,.2,1); }
+}
+.concept-card.open .concept-body { grid-template-rows: 1fr; }
+.cb-inner { min-height: 0; overflow: hidden; }
+.concept-card.open .cb-inner { padding-bottom: 16px; }
+/* No-JS / pre-boot fallback: before .cb-inner exists, fall back to display toggling */
+.concept-body:not(.cb-wrapped) { display: none; padding-bottom: 16px; overflow-x: auto; }
+.concept-card.open .concept-body:not(.cb-wrapped) { display: block; }
 
 .formula-box {
-  background: rgba(108,99,255,0.08);
-  border: 1px solid rgba(108,99,255,0.2);
-  border-radius: 8px;
-  padding: 14px 18px;
-  margin: 10px 0;
+  position: relative;
+  background:
+    radial-gradient(140% 130% at 50% 0%, var(--pa-soft), transparent 55%),
+    #141729;
+  border: 1px solid var(--pa-line);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 12px 0;
   text-align: center;
   font-size: 1rem;
   overflow-x: auto;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 0 28px -14px var(--pa-glow);
 }
 
 .graph-container {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
   padding: 20px;
   margin: 16px 0;
   display: flex;
@@ -200,22 +402,24 @@ svg .node-confounder { fill: rgba(245,158,11,0.2); stroke: var(--warn); }
 svg .edge { stroke: var(--text-dim); stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
 svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,4; fill: none; }
 
+.table-scroll { overflow-x: auto; margin: 16px 0; border-radius: 10px; }
+.table-scroll .comparison-table { margin: 0; }
+
 .comparison-table {
   width: 100%;
   border-collapse: collapse;
   margin: 16px 0;
   font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .comparison-table th {
-  background: rgba(108,99,255,0.15);
-  color: var(--accent2);
+  background: var(--pa-soft);
+  color: var(--pa);
   padding: 10px 14px;
   text-align: left;
   font-weight: 600;
   border-bottom: 2px solid var(--border);
-  position: sticky;
-  top: 0;
 }
 
 .comparison-table td {
@@ -224,27 +428,21 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
   vertical-align: top;
 }
 
-.comparison-table tr:hover td { background: rgba(108,99,255,0.05); }
+.comparison-table tr:hover td { background: rgba(255,255,255,0.025); }
 
-.quiz-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px 24px;
-  margin: 16px 0;
-}
+.quiz-card { padding: 20px 24px; margin: 16px 0; }
 
 .quiz-card .question {
   font-weight: 600;
   margin-bottom: 12px;
-  color: var(--accent2);
+  color: var(--pa);
 }
 
 .quiz-card .answer {
   display: none;
   padding: 14px 18px;
-  background: rgba(34,197,94,0.08);
-  border: 1px solid rgba(34,197,94,0.2);
+  background: rgba(34,197,94,0.07);
+  border: 1px solid rgba(34,197,94,0.22);
   border-radius: 8px;
   margin-top: 10px;
   font-size: 0.9rem;
@@ -253,27 +451,67 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
 
 .quiz-card .answer.show { display: block; }
 
+.quiz-card.graded-right { border-left: 3px solid var(--success); }
+.quiz-card.graded-wrong { border-left: 3px solid var(--danger); }
+.filter-missed .quiz-card.graded-right { display: none; }
+
+.grade-bar { display: flex; gap: 8px; margin-top: 10px; }
+.grade-bar button {
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-family: inherit;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  transition: all 0.15s;
+}
+.grade-bar button[data-g="right"]:hover, .grade-bar button[data-g="right"].on { border-color: var(--success); color: var(--success); background: rgba(34,197,94,0.1); }
+.grade-bar button[data-g="wrong"]:hover, .grade-bar button[data-g="wrong"].on { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.1); }
+
+.scoreboard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 12px 18px;
+  margin: 0 0 18px;
+  background: linear-gradient(180deg, #1c2033, #171a29);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.88rem;
+  color: var(--text-dim);
+}
+.scoreboard strong { color: var(--text); }
+.scoreboard button {
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.scoreboard button:hover, .scoreboard button.on { border-color: var(--pa-line); color: var(--pa); }
+
 .reveal-btn {
   padding: 8px 18px;
-  background: rgba(108,99,255,0.15);
-  border: 1px solid rgba(108,99,255,0.3);
+  background: var(--pa-soft);
+  border: 1px solid var(--pa-line);
   border-radius: 8px;
-  color: var(--accent);
+  color: var(--pa);
   cursor: pointer;
   font-size: 0.85rem;
   font-family: inherit;
   transition: all 0.2s;
 }
 
-.reveal-btn:hover { background: rgba(108,99,255,0.25); }
+.reveal-btn:hover { background: hsl(var(--h) 86% 66% / .22); box-shadow: 0 0 14px -6px var(--pa-glow); }
 
-.flowchart {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 24px;
-  margin: 16px 0;
-}
+.flowchart { padding: 24px; margin: 16px 0; }
 
 .flow-step {
   display: flex;
@@ -282,13 +520,13 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
   margin: 12px 0;
   padding: 12px 16px;
   border-radius: 8px;
-  background: rgba(108,99,255,0.05);
-  border-left: 3px solid var(--accent);
+  background: var(--pa-soft);
+  border-left: 3px solid var(--pa);
 }
 
 .flow-step .step-num {
-  background: var(--accent);
-  color: white;
+  background: var(--pa-strong);
+  color: #fff;
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -298,10 +536,11 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
   font-size: 0.8rem;
   font-weight: 700;
   flex-shrink: 0;
+  box-shadow: 0 0 12px -3px var(--pa-glow);
 }
 
 .flow-step .step-content { font-size: 0.9rem; }
-.flow-step .step-content strong { color: var(--accent2); }
+.flow-step .step-content strong { color: var(--pa); }
 
 .tag-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
 
@@ -317,8 +556,8 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
 .tag-weakness { background: rgba(239,68,68,0.15); color: var(--danger); }
 
 .highlight-box {
-  background: rgba(255,107,157,0.08);
-  border: 1px solid rgba(255,107,157,0.2);
+  background: rgba(255,107,157,0.07);
+  border: 1px solid rgba(255,107,157,0.22);
   border-radius: 8px;
   padding: 14px 18px;
   margin: 12px 0;
@@ -327,11 +566,7 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
 
 .highlight-box strong { color: var(--accent3); }
 
-.progress-bar {
-  display: flex;
-  gap: 4px;
-  margin: 16px 0;
-}
+.progress-bar { display: flex; gap: 4px; margin: 16px 0; }
 
 .progress-segment {
   flex: 1;
@@ -346,41 +581,337 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
 .progress-segment:hover { background: var(--accent2); }
 
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* ---------- Visualization chrome ---------- */
+
+.tab-panel canvas {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg2);
+}
+
+.viz-btn {
+  padding: 8px 18px;
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-family: inherit;
+  font-weight: 500;
+  transition: background 0.18s, border-color 0.18s, color 0.18s, box-shadow 0.18s;
+}
+.viz-btn:hover { border-color: var(--pa-line); color: var(--pa); background: var(--card-hover); }
+.viz-btn.active {
+  background: linear-gradient(135deg, hsl(var(--h) 65% 58%), hsl(var(--h) 70% 48%));
+  color: #fff;
+  border-color: transparent;
+  font-weight: 600;
+  box-shadow: 0 0 18px -5px var(--pa-glow), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.viz-btn.compact { padding: 4px 12px; }
+
+.viz-narration {
+  margin-top: 14px;
+  padding: 12px 16px;
+  background: var(--pa-soft);
+  border: 1px solid var(--pa-line);
+  border-radius: 8px;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  min-height: 44px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .viz-narration.flash { animation: narrFlash 0.5s ease-out; }
+  @keyframes narrFlash { from { background: hsl(var(--h) 86% 66% / .32); } }
+}
+
+button { font-family: inherit; }
+@media (prefers-reduced-motion: no-preference) {
+  .content button { transition: transform 0.13s ease, filter 0.15s ease, box-shadow 0.18s, background 0.18s, border-color 0.18s, color 0.18s; }
+  .content button:hover:not(:disabled) { filter: brightness(1.1); }
+  .content button:active:not(:disabled) { transform: translateY(1px) scale(0.98); }
+}
+.content button:disabled { opacity: 0.4; cursor: default; }
+
+input[type="range"] { accent-color: var(--pa-strong); cursor: pointer; }
+input[type="checkbox"] { accent-color: var(--pa-strong); }
+
+/* ---------- Floating helpers ---------- */
+
+.fab-stack {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 150;
+}
+
+.fab {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: rgba(26,29,46,0.92);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px -6px rgba(0,0,0,0.6);
+  transition: color 0.2s, border-color 0.2s, opacity 0.25s, transform 0.25s;
+}
+.fab:hover { color: var(--pa); border-color: var(--pa-line); }
+.fab.hidden { opacity: 0; pointer-events: none; transform: translateY(8px); }
+
+.toc-pop {
+  position: fixed;
+  right: 22px;
+  bottom: 124px;
+  width: 290px;
+  max-height: min(55vh, 480px);
+  overflow-y: auto;
+  background: rgba(22,25,40,0.97);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  z-index: 160;
+  box-shadow: 0 18px 50px -12px rgba(0,0,0,0.8);
+  display: none;
+}
+.toc-pop.open { display: block; }
+@media (prefers-reduced-motion: no-preference) {
+  .toc-pop.open { animation: tocIn 0.2s ease-out; }
+  @keyframes tocIn { from { opacity: 0; transform: translateY(8px); } }
+}
+.toc-pop .toc-head {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding: 6px 10px;
+}
+.toc-pop a {
+  display: block;
+  padding: 7px 10px;
+  border-radius: 8px;
+  color: var(--text-dim);
+  font-size: 0.84rem;
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  transition: color 0.15s, background 0.15s;
+}
+.toc-pop a:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+.toc-pop a.current { color: var(--pa); border-left-color: var(--pa); background: var(--pa-soft); }
+
+/* ---------- Panel footer nav ---------- */
+
+.panel-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 52px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.panel-nav button {
+  flex: 0 1 auto;
+  max-width: 48%;
+  padding: 12px 18px;
+  background: linear-gradient(180deg, #1c2033, #171a29);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-family: inherit;
+  text-align: left;
+  transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+.panel-nav button:hover { border-color: var(--pa-line); color: var(--text); box-shadow: 0 8px 24px -12px var(--pa-glow); }
+.panel-nav button .pn-label { display: block; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 3px; }
+.panel-nav button .pn-title { color: var(--pa); font-weight: 600; }
+.panel-nav button.pn-next { text-align: right; margin-left: auto; }
+.panel-nav .pn-spacer { flex: 1; }
+
+/* ---------- Search palette ---------- */
+
+.palette-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(10,11,18,0.72);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  display: none;
+  padding: 12vh 16px 0;
+}
+.palette-overlay.open { display: block; }
+
+.palette {
+  max-width: 600px;
+  margin: 0 auto;
+  background: #181b2c;
+  border: 1px solid #353a5c;
+  border-radius: 14px;
+  box-shadow: 0 30px 90px -20px rgba(0,0,0,0.9), 0 0 0 1px rgba(108,99,255,0.15);
+  overflow: hidden;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .palette-overlay.open .palette { animation: palIn 0.18s cubic-bezier(.16,1,.3,1); }
+  @keyframes palIn { from { opacity: 0; transform: translateY(-10px) scale(0.99); } }
+}
+
+.palette input {
+  width: 100%;
+  padding: 16px 18px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 1rem;
+  font-family: inherit;
+  border-bottom: 1px solid var(--border);
+}
+.palette input::placeholder { color: #555c78; }
+
+.palette-results { max-height: 46vh; overflow-y: auto; padding: 8px; }
+.palette-results .p-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  cursor: pointer;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+.palette-results .p-row.sel { background: var(--pa-soft, rgba(108,99,255,0.13)); color: var(--text); }
+.palette-results .p-row .p-chip {
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(108,99,255,0.15);
+  color: var(--accent-text);
+  white-space: nowrap;
+}
+.palette-results .p-row .p-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.palette-results .p-empty { padding: 18px 14px; color: #555c78; font-size: 0.88rem; text-align: center; }
+.palette-hints {
+  display: flex;
+  gap: 16px;
+  padding: 9px 16px;
+  border-top: 1px solid var(--border);
+  font-size: 0.72rem;
+  color: #555c78;
+}
+.palette-hints kbd {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.03);
+  color: var(--text-dim);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .flash-target { animation: cardFlash 1.1s ease-out; }
+  @keyframes cardFlash { from { box-shadow: 0 0 0 2px var(--pa, #6c63ff), 0 0 40px -4px var(--pa-glow, rgba(108,99,255,0.4)); } }
+}
+
+/* ---------- Scroll reveal ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  body.reveal-on .tab-panel.active :is(.card, .concept-card, .quiz-card, .graph-container, .flowchart, .table-scroll):not(.is-visible) {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  body.reveal-on .is-visible {
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.45s ease, transform 0.45s cubic-bezier(.16,1,.3,1);
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (min-width: 1180px) {
+  .tabs { flex-wrap: wrap; }
+}
+
 @media (max-width: 768px) {
   .two-col { grid-template-columns: 1fr; }
   .concept-grid { grid-template-columns: 1fr; }
-  .tabs { padding: 12px 16px 0; }
-  .content { padding: 16px; }
+  .tabs { padding: 8px 12px 0; }
+  .content { padding: 16px 16px 70px; }
+  .header { padding: 18px 16px 14px; }
+  .header h1 { font-size: 1.25rem; }
+  .header .dag-motif { display: none; }
+  .card { padding: 16px; }
+  .fab-stack { right: 14px; bottom: 14px; }
+  .toc-pop { right: 14px; left: 14px; width: auto; }
+  /* keep unbreakable inline math from stretching the layout viewport:
+     wide content scrolls inside its card instead */
+  .card, .quiz-card, .highlight-box, .flowchart, .viz-narration,
+  .flow-step .step-content, .cb-inner { overflow-x: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
 }
 
 .katex { font-size: 1em !important; }
-.katex-display { margin: 8px 0 !important; overflow-x: auto; }
+.formula-box .katex { font-size: 1.07em !important; }
+.katex-display { margin: 8px 0 !important; overflow-x: auto; overflow-y: hidden; }
 </style>
 </head>
 <body>
 
 <div class="header">
+  <svg class="dag-motif" width="190" height="84" viewBox="0 0 190 84" fill="none" aria-hidden="true">
+    <defs><marker id="dagArrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="rgba(108,99,255,0.35)"/></marker></defs>
+    <circle cx="26" cy="58" r="13" stroke="rgba(108,99,255,0.45)" stroke-width="1.5"/>
+    <circle cx="95" cy="20" r="13" stroke="rgba(245,158,11,0.4)" stroke-width="1.5"/>
+    <circle cx="164" cy="58" r="13" stroke="rgba(0,210,255,0.45)" stroke-width="1.5"/>
+    <line x1="40" y1="58" x2="149" y2="58" stroke="rgba(108,99,255,0.3)" stroke-width="1.5" marker-end="url(#dagArrow)"/>
+    <line x1="85" y1="30" x2="38" y2="49" stroke="rgba(245,158,11,0.28)" stroke-width="1.5" marker-end="url(#dagArrow)"/>
+    <line x1="105" y1="30" x2="152" y2="49" stroke="rgba(245,158,11,0.28)" stroke-width="1.5" marker-end="url(#dagArrow)"/>
+    <text x="22" y="62" fill="rgba(167,170,200,0.7)" font-size="11">X</text>
+    <text x="91" y="24" fill="rgba(167,170,200,0.7)" font-size="11">Z</text>
+    <text x="160" y="62" fill="rgba(167,170,200,0.7)" font-size="11">Y</text>
+  </svg>
   <h1>Causal Inference Study Module</h1>
   <div class="subtitle">Columbia Engineering | COMS 4995 &mdash; Spring 2026</div>
-  <a href="chat.html" style="display:inline-block;margin-top:10px;padding:5px 14px;border:1px solid var(--border);border-radius:20px;color:var(--text-dim);font-size:13px;text-decoration:none;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">View Chat Session &rarr;</a>
+  <a href="chat.html" class="pill-link">View Chat Session &rarr;</a>
 </div>
 
-<div class="tabs" id="tabs">
-  <button class="tab active" data-tab="overview">Overview</button>
-  <button class="tab" data-tab="l1">L1: Foundations</button>
-  <button class="tab" data-tab="l2">L2: DGPs & Graphs</button>
-  <button class="tab" data-tab="l3">L3: Back-Door</button>
-  <button class="tab" data-tab="l4">L4: Conditioning</button>
-  <button class="tab" data-tab="l5">L5: Weighting & ML</button>
-  <button class="tab" data-tab="l6">L6: Practical</button>
-  <button class="tab" data-tab="l7">L7: IV</button>
-  <button class="tab" data-tab="l8">L8: Front-Door & Experiments</button>
-  <button class="tab" data-tab="l9">L9: RDD / DID / ITS</button>
-  <button class="tab" data-tab="l10">L10–11: Panel & s-Bias</button>
-  <button class="tab" data-tab="estimand">Estimand Selection</button>
-  <button class="tab" data-tab="drills">Drills (Final Review)</button>
-  <button class="tab" data-tab="methods">Method Matrix</button>
-  <button class="tab" data-tab="practice">Practice</button>
+<div class="tabs" id="tabs" role="tablist" aria-label="Lectures">
+  <button class="tab active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
+  <button class="tab" data-tab="l1" role="tab" aria-selected="false">L1: Foundations</button>
+  <button class="tab" data-tab="l2" role="tab" aria-selected="false">L2: DGPs &amp; Graphs</button>
+  <button class="tab" data-tab="l3" role="tab" aria-selected="false">L3: Back-Door</button>
+  <button class="tab" data-tab="l4" role="tab" aria-selected="false">L4: Conditioning</button>
+  <button class="tab" data-tab="l5" role="tab" aria-selected="false">L5: Weighting &amp; ML</button>
+  <button class="tab" data-tab="l6" role="tab" aria-selected="false">L6: Practical</button>
+  <button class="tab exam-scope" data-tab="l7" role="tab" aria-selected="false">L7: IV</button>
+  <button class="tab exam-scope" data-tab="l8" role="tab" aria-selected="false">L8: Front-Door</button>
+  <button class="tab exam-scope" data-tab="l9" role="tab" aria-selected="false">L9: RDD / DID / ITS</button>
+  <button class="tab exam-scope" data-tab="l10" role="tab" aria-selected="false">L10–11: Panel</button>
+  <button class="tab" data-tab="estimand" role="tab" aria-selected="false">Estimand</button>
+  <button class="tab exam-scope" data-tab="drills" role="tab" aria-selected="false">Drills</button>
+  <button class="tab" data-tab="methods" role="tab" aria-selected="false">Method Matrix</button>
+  <button class="tab" data-tab="practice" role="tab" aria-selected="false">Practice</button>
 </div>
 
 <div class="content">
@@ -646,9 +1177,9 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
   <div class="card" style="padding:24px;">
     <p style="font-size:0.9rem;margin-bottom:14px;">Click a structure to see how information flows. Toggle conditioning on Z to see the path open or close.</p>
     <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
-      <button class="bb-btn bb-active" onclick="bbSet('chain')" id="bbBtnChain" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:600;">Chain: X→Z→Y</button>
-      <button class="bb-btn" onclick="bbSet('fork')" id="bbBtnFork" style="padding:8px 18px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">Fork: X←Z→Y</button>
-      <button class="bb-btn" onclick="bbSet('collider')" id="bbBtnCollider" style="padding:8px 18px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">Collider: X→Z←Y</button>
+      <button class="bb-btn viz-btn active" onclick="bbSet('chain')" id="bbBtnChain">Chain: X→Z→Y</button>
+      <button class="bb-btn viz-btn" onclick="bbSet('fork')" id="bbBtnFork">Fork: X←Z→Y</button>
+      <button class="bb-btn viz-btn" onclick="bbSet('collider')" id="bbBtnCollider">Collider: X→Z←Y</button>
     </div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
       <label style="font-size:0.88rem;cursor:pointer;display:flex;align-items:center;gap:8px;">
@@ -657,7 +1188,7 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
       </label>
     </div>
     <canvas id="bbCanvas" width="680" height="320" style="width:100%;max-width:680px;display:block;margin:0 auto;border-radius:8px;"></canvas>
-    <div id="bbNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+    <div id="bbNarration" class="viz-narration"></div>
   </div>
 
   <div class="card" style="margin-top:16px;">
@@ -745,12 +1276,12 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
   <div class="card" style="padding:24px;">
     <p style="font-size:0.9rem;margin-bottom:14px;">Click on nodes to add/remove them from the conditioning set Z. The visualization shows which paths are blocked or open, and whether X and Y are d-separated.</p>
     <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
-      <button class="ds-graph-btn ds-active" onclick="dsSetGraph(0)" id="dsBtn0" style="padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.84rem;font-weight:600;">Graph 1: Fork + Chain</button>
-      <button class="ds-graph-btn" onclick="dsSetGraph(1)" id="dsBtn1" style="padding:8px 16px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.84rem;">Graph 2: Collider</button>
-      <button class="ds-graph-btn" onclick="dsSetGraph(2)" id="dsBtn2" style="padding:8px 16px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.84rem;">Graph 3: Full DAG</button>
+      <button class="ds-graph-btn viz-btn active" onclick="dsSetGraph(0)" id="dsBtn0">Graph 1: Fork + Chain</button>
+      <button class="ds-graph-btn viz-btn" onclick="dsSetGraph(1)" id="dsBtn1">Graph 2: Collider</button>
+      <button class="ds-graph-btn viz-btn" onclick="dsSetGraph(2)" id="dsBtn2">Graph 3: Full DAG</button>
     </div>
     <canvas id="dsCanvas" width="680" height="340" style="width:100%;max-width:680px;display:block;margin:0 auto;border-radius:8px;cursor:pointer;"></canvas>
-    <div id="dsNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+    <div id="dsNarration" class="viz-narration"></div>
     <div style="margin-top:8px;font-size:0.82rem;color:var(--text-dim);">Click a node to condition on it (highlighted). Click again to remove. X and Y cannot be conditioned on.</div>
   </div>
 
@@ -928,15 +1459,15 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
     <p style="margin-bottom:16px;font-size:0.9rem;color:var(--text-dim);">Click <strong>Step Through</strong> to walk through the matching process one treated unit at a time. Each treated unit (orange) gets paired with the nearest control unit (blue) by propensity score.</p>
 
     <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
-      <button id="psmStepBtn" onclick="psmStep()" style="padding:8px 20px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:600;">Step Through</button>
-      <button id="psmAutoBtn" onclick="psmAutoPlay()" style="padding:8px 20px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">Auto Play</button>
-      <button onclick="psmReset()" style="padding:8px 20px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">Reset</button>
+      <button class="viz-btn active" id="psmStepBtn" onclick="psmStep()">Step Through</button>
+      <button class="viz-btn" id="psmAutoBtn" onclick="psmAutoPlay()">Auto Play</button>
+      <button class="viz-btn" onclick="psmReset()">Reset</button>
       <span id="psmStatus" style="font-size:0.85rem;color:var(--text-dim);align-self:center;margin-left:8px;"></span>
     </div>
 
     <canvas id="psmCanvas" width="750" height="420" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
 
-    <div id="psmNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;">
+    <div id="psmNarration" class="viz-narration">
       Press <strong>Step Through</strong> to begin matching treated units to their nearest control.
     </div>
 
@@ -971,7 +1502,7 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
 
     <canvas id="psSuffCanvas" width="750" height="500" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;cursor:pointer;"></canvas>
 
-    <div id="psSuffNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;">
+    <div id="psSuffNarration" class="viz-narration">
       Click a colored band to see the units inside that propensity score stratum.
     </div>
 
@@ -988,7 +1519,7 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
 
     <canvas id="psDistCanvas" width="750" height="400" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;cursor:grab;"></canvas>
 
-    <div id="psDistNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;">
+    <div id="psDistNarration" class="viz-narration">
       Drag the orange treated unit left/right to explore what happens when you match across different PS distances.
     </div>
   </div>
@@ -1055,14 +1586,14 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
     <p style="margin-bottom:12px;font-size:0.9rem;">BDA and IPW are <strong>algebraically equivalent</strong> — they just rearrange the same adjustment formula. Toggle between them to see how.</p>
 
     <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-      <button id="ipvBdaBtn" class="ipv-toggle active" onclick="ipvSetMode('bda')" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:600;">BDA View</button>
-      <button id="ipvIpwBtn" class="ipv-toggle" onclick="ipvSetMode('ipw')" style="padding:8px 18px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">IPW View</button>
-      <button id="ipvSideBtn" class="ipv-toggle" onclick="ipvSetMode('side')" style="padding:8px 18px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">Side by Side</button>
+      <button id="ipvBdaBtn" class="ipv-toggle active viz-btn" onclick="ipvSetMode('bda')">BDA View</button>
+      <button id="ipvIpwBtn" class="ipv-toggle viz-btn" onclick="ipvSetMode('ipw')">IPW View</button>
+      <button id="ipvSideBtn" class="ipv-toggle viz-btn" onclick="ipvSetMode('side')">Side by Side</button>
     </div>
 
     <canvas id="ipvCanvas" width="750" height="480" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
 
-    <div id="ipvNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+    <div id="ipvNarration" class="viz-narration"></div>
   </div>
 
   <!-- Single-column layout for detailed regression cards -->
@@ -1120,16 +1651,16 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
     <p style="margin-bottom:8px;font-size:0.9rem;">BDA works with <strong>any</strong> model. Toggle the effect type and walk through the 4 steps. The visualization shows the model's predictions under intervention.</p>
 
     <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;align-items:center;">
-      <button id="bdaConstBtn" class="bda-toggle active" onclick="bdaSetEffect('const')" style="padding:7px 16px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.84rem;font-weight:600;">Constant Effect</button>
-      <button id="bdaHetBtn" class="bda-toggle" onclick="bdaSetEffect('het')" style="padding:7px 16px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.84rem;">Heterogeneous Effect</button>
+      <button id="bdaConstBtn" class="bda-toggle active viz-btn compact" onclick="bdaSetEffect('const')">Constant Effect</button>
+      <button id="bdaHetBtn" class="bda-toggle viz-btn compact" onclick="bdaSetEffect('het')">Heterogeneous Effect</button>
       <span style="margin-left:16px;font-size:0.82rem;color:var(--text-dim);">Step: </span>
-      <button id="bdaPrevBtn" onclick="bdaStep(-1)" style="padding:4px 12px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.84rem;">&larr;</button>
+      <button class="viz-btn compact" id="bdaPrevBtn" onclick="bdaStep(-1)">&larr;</button>
       <span id="bdaStepLabel" style="font-size:0.88rem;font-weight:600;min-width:60px;text-align:center;">1 / 4</span>
-      <button id="bdaNextBtn" onclick="bdaStep(1)" style="padding:4px 12px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.84rem;">&rarr;</button>
+      <button class="viz-btn compact" id="bdaNextBtn" onclick="bdaStep(1)">&rarr;</button>
     </div>
 
     <canvas id="bdaCanvas" width="750" height="420" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
-    <div id="bdaNarration" style="margin-top:12px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+    <div id="bdaNarration" class="viz-narration"></div>
   </div>
 
   <!-- Remaining methods in 2-column grid -->
@@ -1176,14 +1707,14 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
     <p style="margin-bottom:12px;font-size:0.9rem;">ML models are <strong>biased by design</strong>. Regularization deliberately introduces systematic error to reduce variance. This is fine for prediction — but fatal for causal inference. Toggle to see why.</p>
 
     <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-      <button id="biasViewPred" class="bias-toggle active" onclick="biasSetMode('prediction')" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:600;">Prediction</button>
-      <button id="biasViewCausal" class="bias-toggle" onclick="biasSetMode('causal')" style="padding:8px 18px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">Causal Inference</button>
-      <button id="biasViewFix" class="bias-toggle" onclick="biasSetMode('fix')" style="padding:8px 18px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">How Double ML Fixes It</button>
+      <button id="biasViewPred" class="bias-toggle active viz-btn" onclick="biasSetMode('prediction')">Prediction</button>
+      <button id="biasViewCausal" class="bias-toggle viz-btn" onclick="biasSetMode('causal')">Causal Inference</button>
+      <button id="biasViewFix" class="bias-toggle viz-btn" onclick="biasSetMode('fix')">How Double ML Fixes It</button>
     </div>
 
     <canvas id="biasCanvas" width="750" height="480" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
 
-    <div id="biasNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+    <div id="biasNarration" class="viz-narration"></div>
   </div>
 
   <!-- Double ML: full-width section -->
@@ -1257,12 +1788,12 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
     <p style="margin-bottom:8px;font-size:0.9rem;">Walk through the residualization steps. Watch how removing Z's influence from both Y and X isolates the causal effect.</p>
     <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;align-items:center;">
       <span style="font-size:0.82rem;color:var(--text-dim);">Step: </span>
-      <button id="dmlPrevBtn" onclick="dmlStep(-1)" style="padding:4px 12px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.84rem;">&larr;</button>
+      <button class="viz-btn compact" id="dmlPrevBtn" onclick="dmlStep(-1)">&larr;</button>
       <span id="dmlStepLabel" style="font-size:0.88rem;font-weight:600;min-width:60px;text-align:center;">1 / 4</span>
-      <button id="dmlNextBtn" onclick="dmlStep(1)" style="padding:4px 12px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.84rem;">&rarr;</button>
+      <button class="viz-btn compact" id="dmlNextBtn" onclick="dmlStep(1)">&rarr;</button>
     </div>
     <canvas id="dmlCanvas" width="750" height="380" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
-    <div id="dmlNarration" style="margin-top:12px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+    <div id="dmlNarration" class="viz-narration"></div>
   </div>
 
   <h2 class="section-title">Concrete Example: Targeted Email Lift Estimation</h2>
@@ -1379,7 +1910,7 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
 
     <canvas id="sensCanvas" width="750" height="460" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
 
-    <div id="sensNarration" style="margin-top:12px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+    <div id="sensNarration" class="viz-narration"></div>
   </div>
 
   <h2 class="section-title">When to Use Which Method</h2>
@@ -1598,7 +2129,7 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
       </label>
     </div>
     <canvas id="ivCanvas" width="750" height="620" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
-    <div id="ivNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+    <div id="ivNarration" class="viz-narration"></div>
   </div>
 
   <h2 class="section-title">Concrete Example: Quarter of Birth &amp; Returns to Schooling (Angrist–Krueger 1991)</h2>
@@ -1805,13 +2336,13 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
   <div class="card" style="padding:24px;">
     <p style="font-size:0.9rem;margin-bottom:14px;">See how novelty effects, cold start, and Hawthorne effects distort A/B test results over time. Toggle each phenomenon on/off.</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
-      <button class="ab-btn ab-active" onclick="abToggle('novelty',this)" id="abNoveltyBtn" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:600;">Novelty Effect</button>
-      <button class="ab-btn" onclick="abToggle('coldstart',this)" id="abColdBtn" style="padding:8px 18px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">Cold Start</button>
-      <button class="ab-btn" onclick="abToggle('hawthorne',this)" id="abHawBtn" style="padding:8px 18px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">Hawthorne Effect</button>
-      <button class="ab-btn" onclick="abToggle('none',this)" id="abNoneBtn" style="padding:8px 18px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">True Effect Only</button>
+      <button class="ab-btn viz-btn active" onclick="abToggle('novelty',this)" id="abNoveltyBtn">Novelty Effect</button>
+      <button class="ab-btn viz-btn" onclick="abToggle('coldstart',this)" id="abColdBtn">Cold Start</button>
+      <button class="ab-btn viz-btn" onclick="abToggle('hawthorne',this)" id="abHawBtn">Hawthorne Effect</button>
+      <button class="ab-btn viz-btn" onclick="abToggle('none',this)" id="abNoneBtn">True Effect Only</button>
     </div>
     <canvas id="abCanvas" width="750" height="340" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
-    <div id="abNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+    <div id="abNarration" class="viz-narration"></div>
   </div>
 
   <h2 class="section-title">Concrete Example: Smoking → Tar → Cancer (Pearl's Front-Door)</h2>
@@ -1977,7 +2508,7 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
       </label>
     </div>
     <canvas id="rdCanvas" width="750" height="380" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
-    <div id="rdNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+    <div id="rdNarration" class="viz-narration"></div>
   </div>
 
   <!-- Interactive: DID Visualization -->
@@ -1985,12 +2516,12 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
   <div class="card" style="padding:24px;">
     <p style="font-size:0.9rem;margin-bottom:14px;">See how DID isolates the treatment effect by differencing away both group differences and time trends. Toggle violations to see how bias enters.</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
-      <button class="did-btn did-active" onclick="didToggle('clean',this)" id="didCleanBtn" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:600;">Clean DID</button>
-      <button class="did-btn" onclick="didToggle('nonparallel',this)" id="didNPBtn" style="padding:8px 18px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">Non-Parallel Trends</button>
-      <button class="did-btn" onclick="didToggle('timevarying',this)" id="didTVBtn" style="padding:8px 18px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">Time-Varying Confounder</button>
+      <button class="did-btn viz-btn active" onclick="didToggle('clean',this)" id="didCleanBtn">Clean DID</button>
+      <button class="did-btn viz-btn" onclick="didToggle('nonparallel',this)" id="didNPBtn">Non-Parallel Trends</button>
+      <button class="did-btn viz-btn" onclick="didToggle('timevarying',this)" id="didTVBtn">Time-Varying Confounder</button>
     </div>
     <canvas id="didCanvas" width="750" height="340" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
-    <div id="didNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+    <div id="didNarration" class="viz-narration"></div>
   </div>
 
   <h2 class="section-title">Concrete Examples: Card–Krueger DID, Thistlethwaite RDD, California Prop 13 ITS</h2>
@@ -2139,7 +2670,7 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
   <div class="card" style="padding:24px;">
     <p style="font-size:0.9rem;margin-bottom:14px;">See how the potential outcome matrices relate. Click cells to toggle treatment assignment and watch the missingness pattern update.</p>
     <canvas id="mcCanvas" width="750" height="420" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
-    <div id="mcNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+    <div id="mcNarration" class="viz-narration"></div>
   </div>
 
   <!-- Interactive: Regime Shift Visualization -->
@@ -2154,7 +2685,7 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
       </label>
     </div>
     <canvas id="regimeCanvas" width="750" height="360" style="width:100%;max-width:750px;display:block;margin:0 auto;border-radius:8px;"></canvas>
-    <div id="regimeNarration" style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.88rem;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);min-height:44px;"></div>
+    <div id="regimeNarration" class="viz-narration"></div>
   </div>
 
   <!-- Selection Bias Adjustment (Review 2 L11 content) -->
@@ -2857,59 +3388,114 @@ svg .edge-blocked { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6,
 </svg>
 
 <script>
-// Tab switching
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
-    // Re-render math in newly visible panel
-    if (typeof renderMathInElement === 'function') {
-      renderMathInElement(document.getElementById('panel-' + tab.dataset.tab), {
-        delimiters: [
-          {left: '$$', right: '$$', display: true},
-          {left: '$', right: '$', display: false}
-        ]
-      });
-    }
-  });
-});
+// ===== Core: tabs, routing, math rendering, study state =====
+const MOTION_OK = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const ALL_TABS = Array.from(document.querySelectorAll('.tab'));
+const TAB_IDS = ALL_TABS.map(t => t.dataset.tab);
+const tabsBar = document.getElementById('tabs');
+const tabScroll = {}; // per-tab scroll position memory
 
-// Concept card toggle
-function toggleCard(card) {
-  card.classList.toggle('open');
-  if (card.classList.contains('open') && typeof renderMathInElement === 'function') {
-    renderMathInElement(card, {
-      delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
-    });
-  }
+// Sliding active-tab indicator
+const tabIndicator = document.createElement('span');
+tabIndicator.className = 'tab-indicator';
+tabsBar.appendChild(tabIndicator);
+function moveIndicator() {
+  const tab = tabsBar.querySelector('.tab.active');
+  if (!tab) return;
+  tabIndicator.style.width = tab.offsetWidth + 'px';
+  tabIndicator.style.transform =
+    'translate(' + tab.offsetLeft + 'px,' + (tab.offsetTop + tab.offsetHeight - 2) + 'px)';
+}
+window.addEventListener('resize', moveIndicator);
+window.addEventListener('load', moveIndicator);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(moveIndicator);
+
+// KaTeX: lazy, once per panel (the head onload hook calls renderPanelMath for the active panel)
+const MATH_OPTS = { delimiters: [
+  {left: '$$', right: '$$', display: true},
+  {left: '$', right: '$', display: false}
+]};
+function renderPanelMath(panel) {
+  if (!panel || panel.dataset.mathDone || typeof renderMathInElement !== 'function') return;
+  renderMathInElement(panel, MATH_OPTS);
+  panel.dataset.mathDone = '1';
+}
+window.renderPanelMath = renderPanelMath;
+function renderMathIn(el) { // for dynamically injected narration fragments
+  if (el && typeof renderMathInElement === 'function') renderMathInElement(el, MATH_OPTS);
 }
 
-// Quiz answer toggle
+function activateTab(id, opts) {
+  opts = opts || {};
+  const tab = tabsBar.querySelector('.tab[data-tab="' + id + '"]');
+  const panel = document.getElementById('panel-' + id);
+  if (!tab || !panel) return;
+  const prev = document.querySelector('.tab-panel.active');
+  if (prev === panel) return;
+  if (prev) tabScroll[prev.id] = window.scrollY;
+  ALL_TABS.forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  tab.setAttribute('aria-selected', 'true');
+  panel.classList.add('active');
+  moveIndicator();
+  tab.scrollIntoView({ behavior: MOTION_OK ? 'smooth' : 'auto', inline: 'center', block: 'nearest' });
+  renderPanelMath(panel);
+  if (!opts.keepHash) history.replaceState(null, '', '#' + id);
+  try { localStorage.setItem('ci.lastTab', id); } catch (e) {}
+  if (!opts.noScroll) window.scrollTo({ top: tabScroll[panel.id] || 0, behavior: 'auto' });
+  document.dispatchEvent(new CustomEvent('ci:tabshown', { detail: { id: id } }));
+}
+window.activateTab = activateTab;
+
+ALL_TABS.forEach(tab => tab.addEventListener('click', () => activateTab(tab.dataset.tab)));
+
+window.addEventListener('popstate', () => {
+  const id = location.hash.slice(1);
+  if (TAB_IDS.includes(id)) activateTab(id, { keepHash: true });
+});
+
+// Restore last position: URL hash wins, then localStorage, then overview
+(function initTab() {
+  const fromHash = location.hash.slice(1);
+  let start = TAB_IDS.includes(fromHash) ? fromHash : null;
+  if (!start) {
+    try {
+      const saved = localStorage.getItem('ci.lastTab');
+      if (TAB_IDS.includes(saved)) start = saved;
+    } catch (e) {}
+  }
+  if (start && start !== 'overview') activateTab(start, { keepHash: !location.hash });
+  else moveIndicator();
+})();
+
+// Concept card toggle (math is pre-rendered per panel; this is pure state)
+function toggleCard(card) {
+  card.classList.toggle('open');
+}
+
+// Quiz answer toggle with reveal animation
 function toggleAnswer(btn) {
   const answer = btn.nextElementSibling;
   answer.classList.toggle('show');
   btn.textContent = answer.classList.contains('show') ? 'Hide Answer' : 'Show Answer';
-  // Render math in answer
-  if (typeof renderMathInElement === 'function') {
-    renderMathInElement(answer, {
-      delimiters: [
-        {left: '$$', right: '$$', display: true},
-        {left: '$', right: '$', display: false}
-      ]
-    });
+  if (answer.classList.contains('show') && MOTION_OK && answer.animate) {
+    answer.animate(
+      [{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }],
+      { duration: 220, easing: 'ease-out' }
+    );
   }
 }
 
-// Keyboard navigation
+// Keyboard navigation: arrows switch tabs, but never while a control has focus
 document.addEventListener('keydown', (e) => {
-  const tabs = Array.from(document.querySelectorAll('.tab'));
-  const activeIdx = tabs.findIndex(t => t.classList.contains('active'));
-  if (e.key === 'ArrowRight' && activeIdx < tabs.length - 1) {
-    tabs[activeIdx + 1].click();
+  if (e.target.matches('input, textarea, select') || e.target.isContentEditable) return;
+  if (document.querySelector('.palette-overlay.open')) return;
+  const activeIdx = ALL_TABS.findIndex(t => t.classList.contains('active'));
+  if (e.key === 'ArrowRight' && activeIdx < ALL_TABS.length - 1) {
+    ALL_TABS[activeIdx + 1].click();
   } else if (e.key === 'ArrowLeft' && activeIdx > 0) {
-    tabs[activeIdx - 1].click();
+    ALL_TABS[activeIdx - 1].click();
   }
 });
 
@@ -2933,8 +3519,8 @@ document.addEventListener('keydown', (e) => {
     const dpr = window.devicePixelRatio || 1;
     canvas.width = BASE_W * dpr;
     canvas.height = BASE_H * dpr;
-    canvas.style.width = BASE_W + 'px';
-    canvas.style.height = BASE_H + 'px';
+    canvas.style.width = '100%'; canvas.style.maxWidth = BASE_W + 'px';
+    canvas.style.height = 'auto';
 
     const ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
@@ -3145,21 +3731,26 @@ document.addEventListener('keydown', (e) => {
   window.bbSet = function(m) {
     mode = m;
     document.getElementById('bbCondition').checked = false;
-    document.querySelectorAll('.bb-btn').forEach(function(b) {
-      b.style.background = 'var(--card)'; b.style.color = 'var(--text)'; b.style.border = '1px solid var(--border)';
-    });
+    document.querySelectorAll('.bb-btn').forEach(function(b) { b.classList.remove('active'); });
     var id = m === 'chain' ? 'bbBtnChain' : m === 'fork' ? 'bbBtnFork' : 'bbBtnCollider';
-    var el = document.getElementById(id);
-    el.style.background = 'var(--accent)'; el.style.color = '#fff'; el.style.border = 'none';
+    document.getElementById(id).classList.add('active');
     bbDraw();
   };
 
+  let bbRafId = null;
+  let bbLastNarr = '';
+  let bbDpr = 0;
+
   window.bbDraw = function() {
+    if (bbRafId) { cancelAnimationFrame(bbRafId); bbRafId = null; }
     var dpr = window.devicePixelRatio || 1;
-    canvas.width = BW * dpr; canvas.height = BH * dpr;
-    canvas.style.width = BW + 'px'; canvas.style.height = BH + 'px';
+    if (dpr !== bbDpr) {
+      bbDpr = dpr;
+      canvas.width = BW * dpr; canvas.height = BH * dpr;
+      canvas.style.width = '100%'; canvas.style.maxWidth = BW + 'px'; canvas.style.height = 'auto';
+    }
     var ctx = canvas.getContext('2d');
-    ctx.scale(dpr, dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.fillStyle = '#12141f'; ctx.fillRect(0, 0, BW, BH);
 
     var cond = document.getElementById('bbCondition').checked;
@@ -3278,7 +3869,7 @@ document.addEventListener('keydown', (e) => {
     }
 
     // Structure label
-    ctx.fillStyle = 'var(--text-dim)'; ctx.font = '12px Inter, system-ui, sans-serif';
+    ctx.fillStyle = '#a3aab8'; ctx.font = '12px Inter, system-ui, sans-serif';
     var structLabel = mode === 'chain' ? 'Chain: X → Z → Y' : mode === 'fork' ? 'Fork: X ← Z → Y' : 'Collider: X → Z ← Y';
     ctx.fillText(structLabel, cx, BH - 20);
 
@@ -3355,25 +3946,29 @@ document.addEventListener('keydown', (e) => {
       }
     }
 
-    // Narration
+    // Narration (written only when it changes — not per animation frame)
+    var narrHTML;
     if (mode === 'chain') {
-      if (!cond) narr.innerHTML = '<strong>Chain — Smoking → Tar → Cancer:</strong> cor(X, Y) = 0.40. Smoking and cancer are correlated because information flows through tar deposits. X tells you about Z, which tells you about Y.';
-      else narr.innerHTML = '<strong>Chain — conditioned on Tar:</strong> cor(X, Y | Z) = 0.01. Path <strong>blocked</strong>. Once you know the tar level, smoking provides no additional information about cancer. <span style="color:rgba(239,68,68,0.8);">Caution: if Z is a mediator, this kills the causal signal too!</span>';
+      if (!cond) narrHTML = '<strong>Chain — Smoking → Tar → Cancer:</strong> cor(X, Y) = 0.40. Smoking and cancer are correlated because information flows through tar deposits. X tells you about Z, which tells you about Y.';
+      else narrHTML = '<strong>Chain — conditioned on Tar:</strong> cor(X, Y | Z) = 0.01. Path <strong>blocked</strong>. Once you know the tar level, smoking provides no additional information about cancer. <span style="color:rgba(239,68,68,0.8);">Caution: if Z is a mediator, this kills the causal signal too!</span>';
     } else if (mode === 'fork') {
-      if (!cond) narr.innerHTML = '<strong>Fork — Loyalty → Discount & Purchases:</strong> Naive effect = 0.44 (inflated). Loyalty causes both discounts and high purchase rates. The groups aren\'t comparable — high-loyalty customers dominate the discount group.';
-      else narr.innerHTML = '<strong>Fork — conditioned on Loyalty:</strong> Within each stratum, δ = 0.20. Path <strong>blocked</strong>. Holding the common cause fixed removes confounding. The true causal effect of discounts emerges.';
+      if (!cond) narrHTML = '<strong>Fork — Loyalty → Discount & Purchases:</strong> Naive effect = 0.44 (inflated). Loyalty causes both discounts and high purchase rates. The groups aren\'t comparable — high-loyalty customers dominate the discount group.';
+      else narrHTML = '<strong>Fork — conditioned on Loyalty:</strong> Within each stratum, δ = 0.20. Path <strong>blocked</strong>. Holding the common cause fixed removes confounding. The true causal effect of discounts emerges.';
     } else {
-      if (!cond) narr.innerHTML = '<strong>Collider — Math & Writing → Admission:</strong> cor(Math, Writing) = 0.012. Path <strong>naturally blocked</strong>. In the full population, math and writing are independent — knowing one tells you nothing about the other.';
-      else narr.innerHTML = '<strong>Collider — conditioned on Admission:</strong> cor(Math, Writing | Admitted) = -0.290. Path <strong>opened!</strong> Among admitted students, low math implies high writing ("explaining away"). Conditioning on the collider created a spurious association.';
+      if (!cond) narrHTML = '<strong>Collider — Math & Writing → Admission:</strong> cor(Math, Writing) = 0.012. Path <strong>naturally blocked</strong>. In the full population, math and writing are independent — knowing one tells you nothing about the other.';
+      else narrHTML = '<strong>Collider — conditioned on Admission:</strong> cor(Math, Writing | Admitted) = -0.290. Path <strong>opened!</strong> Among admitted students, low math implies high writing ("explaining away"). Conditioning on the collider created a spurious association.';
     }
+    if (narrHTML !== bbLastNarr) { bbLastNarr = narrHTML; narr.innerHTML = narrHTML; }
 
-    if (pathOpen) requestAnimationFrame(bbDraw);
+    var panelActive = document.getElementById('panel-l2').classList.contains('active');
+    if (pathOpen && panelActive) bbRafId = requestAnimationFrame(bbDraw);
   };
 
-  // Observe L2 tab visibility
+  // Observe L2 tab visibility: draw on activation, halt the loop on deactivation
   var obs = new MutationObserver(function() {
     var panel = document.getElementById('panel-l2');
     if (panel && panel.classList.contains('active')) bbDraw();
+    else if (bbRafId) { cancelAnimationFrame(bbRafId); bbRafId = null; }
   });
   obs.observe(document.getElementById('panel-l2'), { attributes: true, attributeFilter: ['class'] });
   setTimeout(function() { bbSet('chain'); }, 200);
@@ -3484,18 +4079,15 @@ document.addEventListener('keydown', (e) => {
   window.dsSetGraph = function(idx) {
     graphIdx = idx;
     conditioned = {};
-    document.querySelectorAll('.ds-graph-btn').forEach(function(b) {
-      b.style.background = 'var(--card)'; b.style.color = 'var(--text)'; b.style.border = '1px solid var(--border)';
-    });
-    var el = document.getElementById('dsBtn' + idx);
-    el.style.background = 'var(--accent)'; el.style.color = '#fff'; el.style.border = 'none';
+    document.querySelectorAll('.ds-graph-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.getElementById('dsBtn' + idx).classList.add('active');
     dsDraw();
   };
 
   function dsDraw() {
     var dpr = window.devicePixelRatio || 1;
     canvas.width = DW * dpr; canvas.height = DH * dpr;
-    canvas.style.width = DW + 'px'; canvas.style.height = DH + 'px';
+    canvas.style.width = '100%'; canvas.style.maxWidth = DW + 'px'; canvas.style.height = 'auto';
     var ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
     ctx.fillStyle = '#12141f'; ctx.fillRect(0, 0, DW, DH);
@@ -3605,9 +4197,9 @@ document.addEventListener('keydown', (e) => {
   // Click handler
   canvas.addEventListener('click', function(e) {
     var rect = canvas.getBoundingClientRect();
-    var scaleX = DW / rect.width;
+    var scaleX = DW / rect.width, scaleY = DH / rect.height;
     var mx = (e.clientX - rect.left) * scaleX;
-    var my = (e.clientY - rect.top) * scaleX;
+    var my = (e.clientY - rect.top) * scaleY;
     var g = graphs[graphIdx];
     for (var i = 0; i < g.nodes.length; i++) {
       var node = g.nodes[i];
@@ -3653,8 +4245,8 @@ document.addEventListener('keydown', (e) => {
     const dpr = window.devicePixelRatio || 1;
     canvas.width = PSM_W * dpr;
     canvas.height = PSM_H * dpr;
-    canvas.style.width = PSM_W + 'px';
-    canvas.style.height = PSM_H + 'px';
+    canvas.style.width = '100%'; canvas.style.maxWidth = PSM_W + 'px';
+    canvas.style.height = 'auto';
     const ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
 
@@ -3839,24 +4431,31 @@ document.addEventListener('keydown', (e) => {
       status.textContent = 'Done! ATT = ' + (sum/pairs.length).toFixed(2);
       status.style.color = 'var(--success)';
       narr.innerHTML += '<br><br><strong style="color:var(--success);">All treated units matched.</strong> ATT = average of all pair deltas = <strong>' + (sum/pairs.length).toFixed(2) + '</strong>. This is the estimated effect of treatment on the treated.';
-      if(autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+      psmStopAuto();
     } else {
       status.textContent = 'Step ' + stepIdx + '/' + treated.length;
     }
     drawPSM();
   };
 
+  function psmStopAuto() {
+    if(autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+    var btn = document.getElementById('psmAutoBtn');
+    btn.textContent = 'Auto Play'; btn.classList.remove('active');
+  }
   window.psmAutoPlay = function() {
-    if(autoTimer) { clearInterval(autoTimer); autoTimer = null; return; }
+    if(autoTimer) { psmStopAuto(); return; }
     if(stepIdx >= treated.length) psmReset();
+    var btn = document.getElementById('psmAutoBtn');
+    btn.textContent = 'Pause'; btn.classList.add('active');
     autoTimer = setInterval(function() {
       psmStep();
-      if(stepIdx >= treated.length) { clearInterval(autoTimer); autoTimer = null; }
+      if(stepIdx >= treated.length) psmStopAuto();
     }, 900);
   };
 
   window.psmReset = function() {
-    if(autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+    psmStopAuto();
     stepIdx = 0;
     pairs.length = 0;
     for(const t of treated) { t.matched = false; t.matchIdx = -1; }
@@ -3867,10 +4466,11 @@ document.addEventListener('keydown', (e) => {
     drawPSM();
   };
 
-  // Draw on tab activation
+  // Draw on tab activation; pause autoplay when the panel hides
   const psmObserver = new MutationObserver(function() {
     const panel = document.getElementById('panel-l4');
     if (panel && panel.classList.contains('active')) drawPSM();
+    else psmStopAuto();
   });
   psmObserver.observe(document.getElementById('panel-l4'), { attributes: true, attributeFilter: ['class'] });
   setTimeout(drawPSM, 150);
@@ -3891,7 +4491,7 @@ document.addEventListener('keydown', (e) => {
   function draw() {
     var dpr = window.devicePixelRatio || 1;
     canvas.width = CW * dpr; canvas.height = CH * dpr;
-    canvas.style.width = CW + 'px'; canvas.style.height = CH + 'px';
+    canvas.style.width = '100%'; canvas.style.maxWidth = CW + 'px'; canvas.style.height = 'auto';
     var ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
     ctx.fillStyle = '#12141f'; ctx.fillRect(0, 0, CW, CH);
@@ -4202,12 +4802,9 @@ document.addEventListener('keydown', (e) => {
 
   window.biasSetMode = function(m) {
     mode = m;
-    document.querySelectorAll('.bias-toggle').forEach(function(btn){
-      btn.style.background = 'var(--card)'; btn.style.color = 'var(--text)'; btn.style.border = '1px solid var(--border)';
-    });
+    document.querySelectorAll('.bias-toggle').forEach(function(btn){ btn.classList.remove('active'); });
     var activeId = m === 'prediction' ? 'biasViewPred' : m === 'causal' ? 'biasViewCausal' : 'biasViewFix';
-    var el = document.getElementById(activeId);
-    el.style.background = 'var(--accent)'; el.style.color = '#fff'; el.style.border = 'none';
+    document.getElementById(activeId).classList.add('active');
 
     if (m === 'prediction') {
       narr.innerHTML = '<strong>For prediction</strong>, total error = Bias² + Variance. Regularization adds small bias but dramatically reduces variance. Net effect: better predictions. The <strong>scored metric (MSE)</strong> goes down. Nobody cares <em>why</em> the prediction is good — only that it is.';
@@ -4274,7 +4871,7 @@ document.addEventListener('keydown', (e) => {
   function draw() {
     var dpr = window.devicePixelRatio || 1;
     canvas.width = CW * dpr; canvas.height = CH * dpr;
-    canvas.style.width = CW + 'px'; canvas.style.height = CH + 'px';
+    canvas.style.width = '100%'; canvas.style.maxWidth = CW + 'px'; canvas.style.height = 'auto';
     var ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
     ctx.fillStyle = '#12141f'; ctx.fillRect(0, 0, CW, CH);
@@ -4520,8 +5117,8 @@ document.addEventListener('keydown', (e) => {
   window.dmlStep = function(dir) {
     step = Math.max(1, Math.min(4, step + dir));
     document.getElementById('dmlStepLabel').textContent = step + ' / 4';
-    document.getElementById('dmlPrevBtn').style.opacity = step === 1 ? '0.3' : '1';
-    document.getElementById('dmlNextBtn').style.opacity = step === 4 ? '0.3' : '1';
+    document.getElementById('dmlPrevBtn').disabled = step === 1;
+    document.getElementById('dmlNextBtn').disabled = step === 4;
     draw();
   };
 
@@ -4573,7 +5170,7 @@ document.addEventListener('keydown', (e) => {
   function draw() {
     const dpr = window.devicePixelRatio || 1;
     canvas.width = CW * dpr; canvas.height = CH * dpr;
-    canvas.style.width = CW + 'px'; canvas.style.height = CH + 'px';
+    canvas.style.width = '100%'; canvas.style.maxWidth = CW + 'px'; canvas.style.height = 'auto';
     const ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
     ctx.fillStyle = '#12141f'; ctx.fillRect(0, 0, CW, CH);
@@ -4727,12 +5324,9 @@ document.addEventListener('keydown', (e) => {
 
   window.bdaSetEffect = function(type) {
     effectType = type;
-    document.querySelectorAll('.bda-toggle').forEach(function(b) {
-      b.style.background = 'var(--card)'; b.style.color = 'var(--text)'; b.style.border = '1px solid var(--border)';
-    });
+    document.querySelectorAll('.bda-toggle').forEach(function(b) { b.classList.remove('active'); });
     var id = type === 'const' ? 'bdaConstBtn' : 'bdaHetBtn';
-    var el = document.getElementById(id);
-    el.style.background = 'var(--accent)'; el.style.color = '#fff'; el.style.border = 'none';
+    document.getElementById(id).classList.add('active');
     step = 1; updateStepUI(); draw();
   };
 
@@ -4743,8 +5337,8 @@ document.addEventListener('keydown', (e) => {
 
   function updateStepUI() {
     document.getElementById('bdaStepLabel').textContent = step + ' / 4';
-    document.getElementById('bdaPrevBtn').style.opacity = step === 1 ? '0.3' : '1';
-    document.getElementById('bdaNextBtn').style.opacity = step === 4 ? '0.3' : '1';
+    document.getElementById('bdaPrevBtn').disabled = step === 1;
+    document.getElementById('bdaNextBtn').disabled = step === 4;
   }
 
   var obs = new MutationObserver(function() {
@@ -4798,7 +5392,7 @@ document.addEventListener('keydown', (e) => {
   function draw() {
     const dpr = window.devicePixelRatio || 1;
     canvas.width = CW * dpr; canvas.height = CH * dpr;
-    canvas.style.width = CW + 'px'; canvas.style.height = CH + 'px';
+    canvas.style.width = '100%'; canvas.style.maxWidth = CW + 'px'; canvas.style.height = 'auto';
     const ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
     ctx.fillStyle = '#12141f'; ctx.fillRect(0,0,CW,CH);
@@ -5103,12 +5697,9 @@ document.addEventListener('keydown', (e) => {
 
   window.ipvSetMode = function(m) {
     mode = m;
-    document.querySelectorAll('.ipv-toggle').forEach(function(btn){
-      btn.style.background = 'var(--card)'; btn.style.color = 'var(--text)'; btn.style.border = '1px solid var(--border)';
-    });
+    document.querySelectorAll('.ipv-toggle').forEach(function(btn){ btn.classList.remove('active'); });
     const activeBtn = m === 'bda' ? 'ipvBdaBtn' : m === 'ipw' ? 'ipvIpwBtn' : 'ipvSideBtn';
-    const el = document.getElementById(activeBtn);
-    el.style.background = 'var(--accent)'; el.style.color = '#fff'; el.style.border = 'none';
+    document.getElementById(activeBtn).classList.add('active');
 
     if (m === 'bda') {
       narr.innerHTML = '<strong>BDA approach:</strong> Explicitly stratify by Z, compute E[Y|X,Z] within each stratum, then take weighted average using <strong>P(Z)</strong> as weights. Clean and intuitive, but requires discrete or binnable Z.';
@@ -5186,7 +5777,7 @@ document.addEventListener('keydown', (e) => {
   function drawSuff() {
     const dpr = window.devicePixelRatio || 1;
     canvas.width = BW * dpr; canvas.height = BH * dpr;
-    canvas.style.width = BW + 'px'; canvas.style.height = BH + 'px';
+    canvas.style.width = '100%'; canvas.style.maxWidth = BW + 'px'; canvas.style.height = 'auto';
     const ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
 
@@ -5345,7 +5936,7 @@ document.addEventListener('keydown', (e) => {
   function drawDist() {
     const dpr = window.devicePixelRatio || 1;
     canvas.width = DW * dpr; canvas.height = DH * dpr;
-    canvas.style.width = DW + 'px'; canvas.style.height = DH + 'px';
+    canvas.style.width = '100%'; canvas.style.maxWidth = DW + 'px'; canvas.style.height = 'auto';
     const ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
 
@@ -5483,8 +6074,9 @@ document.addEventListener('keydown', (e) => {
     }
   }
 
-  // Drag handling
-  canvas.addEventListener('mousedown', function(e) {
+  // Drag handling (pointer events: mouse + touch, capture survives leaving the canvas)
+  canvas.style.touchAction = 'none';
+  canvas.addEventListener('pointerdown', function(e) {
     const rect = canvas.getBoundingClientRect();
     const scaleX = DW / rect.width, scaleY = DH / rect.height;
     const mx = (e.clientX - rect.left) * scaleX;
@@ -5496,9 +6088,11 @@ document.addEventListener('keydown', (e) => {
     const tx = pad.left + dragPS * plotW;
     if(Math.abs(mx-tx) < 25 && Math.abs(my-treatedY) < 25) {
       dragging = true; canvas.style.cursor = 'grabbing';
+      canvas.setPointerCapture(e.pointerId);
+      e.preventDefault();
     }
   });
-  canvas.addEventListener('mousemove', function(e) {
+  canvas.addEventListener('pointermove', function(e) {
     if(!dragging) return;
     const rect = canvas.getBoundingClientRect();
     const scaleX = DW / rect.width;
@@ -5509,8 +6103,8 @@ document.addEventListener('keydown', (e) => {
     drawDist();
     updateDistNarr();
   });
-  canvas.addEventListener('mouseup', function() { dragging = false; canvas.style.cursor = 'grab'; });
-  canvas.addEventListener('mouseleave', function() { dragging = false; canvas.style.cursor = 'grab'; });
+  canvas.addEventListener('pointerup', function() { dragging = false; canvas.style.cursor = 'grab'; });
+  canvas.addEventListener('pointercancel', function() { dragging = false; canvas.style.cursor = 'grab'; });
 
   const obs2 = new MutationObserver(function() {
     const panel = document.getElementById('panel-l4');
@@ -5545,7 +6139,7 @@ document.addEventListener('keydown', (e) => {
   function draw(alpha) {
     var dpr = window.devicePixelRatio || 1;
     canvas.width = CW * dpr; canvas.height = CH * dpr;
-    canvas.style.width = CW + 'px'; canvas.style.height = CH + 'px';
+    canvas.style.width = '100%'; canvas.style.maxWidth = CW + 'px'; canvas.style.height = 'auto';
     var ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
     ctx.fillStyle = '#12141f'; ctx.fillRect(0, 0, CW, CH);
@@ -5751,7 +6345,11 @@ document.addEventListener('keydown', (e) => {
     if (panel && panel.classList.contains('active')) draw(parseFloat(slider.value));
   });
   obs.observe(document.getElementById('panel-l6'), { attributes: true, attributeFilter: ['class'] });
-  setTimeout(function() { draw(0); updateNarr(0); }, 200);
+  setTimeout(function() {
+    var a = parseFloat(slider.value) || 0;
+    alphaLabel.textContent = '\u03b1 = ' + a.toFixed(2);
+    draw(a); updateNarr(a);
+  }, 200);
 })();
 
 // ===== L7: Instrumental Variables Visualization =====
@@ -5776,7 +6374,7 @@ document.addEventListener('keydown', (e) => {
 
     var dpr = window.devicePixelRatio || 1;
     canvas.width = CW * dpr; canvas.height = CH * dpr;
-    canvas.style.width = CW + 'px'; canvas.style.height = CH + 'px';
+    canvas.style.width = '100%'; canvas.style.maxWidth = CW + 'px'; canvas.style.height = 'auto';
     var ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
     ctx.fillStyle = '#12141f'; ctx.fillRect(0, 0, CW, CH);
@@ -6141,14 +6739,8 @@ document.addEventListener('keydown', (e) => {
 
   window.abToggle = function(mode, btn) {
     abMode = mode;
-    document.querySelectorAll('.ab-btn').forEach(function(b) {
-      b.style.background = 'var(--card)'; b.style.color = 'var(--text)';
-      b.style.border = '1px solid var(--border)'; b.style.fontWeight = '400';
-      b.className = 'ab-btn';
-    });
-    btn.style.background = 'var(--accent)'; btn.style.color = '#fff';
-    btn.style.border = 'none'; btn.style.fontWeight = '600';
-    btn.className = 'ab-btn ab-active';
+    document.querySelectorAll('.ab-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
     drawAB();
   };
 
@@ -6163,7 +6755,7 @@ document.addEventListener('keydown', (e) => {
   function drawAB() {
     var dpr = window.devicePixelRatio || 1;
     canvas.width = CW * dpr; canvas.height = CH * dpr;
-    canvas.style.width = CW + 'px'; canvas.style.height = CH + 'px';
+    canvas.style.width = '100%'; canvas.style.maxWidth = CW + 'px'; canvas.style.height = 'auto';
     var ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
     ctx.fillStyle = '#12141f'; ctx.fillRect(0, 0, CW, CH);
@@ -6280,7 +6872,7 @@ document.addEventListener('keydown', (e) => {
 
     var dpr = window.devicePixelRatio || 1;
     canvas.width = CW * dpr; canvas.height = CH * dpr;
-    canvas.style.width = CW + 'px'; canvas.style.height = CH + 'px';
+    canvas.style.width = '100%'; canvas.style.maxWidth = CW + 'px'; canvas.style.height = 'auto';
     var ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
     ctx.fillStyle = '#12141f'; ctx.fillRect(0, 0, CW, CH);
@@ -6391,6 +6983,7 @@ document.addEventListener('keydown', (e) => {
     } else {
       narr.innerHTML = '<strong>Wide bandwidth (' + bw.toFixed(2) + ').</strong> More data = more precision, but units far from the cutoff may differ in other ways. The RD estimate starts to incorporate the functional form assumption (how $E[Y|Z]$ curves) rather than just the local comparison. If the curves are misspecified, the estimate is biased. <em>Bias-variance tradeoff at work.</em>';
     }
+    renderMathIn(narr);
   }
 
   bwSlider.addEventListener('input', drawRD);
@@ -6413,19 +7006,15 @@ document.addEventListener('keydown', (e) => {
 
   window.didToggle = function(mode, btn) {
     didMode = mode;
-    document.querySelectorAll('.did-btn').forEach(function(b) {
-      b.style.background = 'var(--card)'; b.style.color = 'var(--text)';
-      b.style.border = '1px solid var(--border)'; b.style.fontWeight = '400';
-    });
-    btn.style.background = 'var(--accent)'; btn.style.color = '#fff';
-    btn.style.border = 'none'; btn.style.fontWeight = '600';
+    document.querySelectorAll('.did-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
     drawDID();
   };
 
   function drawDID() {
     var dpr = window.devicePixelRatio || 1;
     canvas.width = CW * dpr; canvas.height = CH * dpr;
-    canvas.style.width = CW + 'px'; canvas.style.height = CH + 'px';
+    canvas.style.width = '100%'; canvas.style.maxWidth = CW + 'px'; canvas.style.height = 'auto';
     var ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
     ctx.fillStyle = '#12141f'; ctx.fillRect(0, 0, CW, CH);
@@ -6578,7 +7167,7 @@ document.addEventListener('keydown', (e) => {
   function drawMC() {
     var dpr = window.devicePixelRatio || 1;
     canvas.width = CW * dpr; canvas.height = CH * dpr;
-    canvas.style.width = CW + 'px'; canvas.style.height = CH + 'px';
+    canvas.style.width = '100%'; canvas.style.maxWidth = CW + 'px'; canvas.style.height = 'auto';
     var ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
     ctx.fillStyle = '#12141f'; ctx.fillRect(0, 0, CW, CH);
@@ -6664,6 +7253,7 @@ document.addEventListener('keydown', (e) => {
     });
 
     narr.innerHTML = '<strong>Matrix completion for causal inference.</strong> The treatment matrix $D_{it}$ determines which potential outcomes we observe. Each cell is observed in exactly one matrix and missing in the other — they are perfectly complementary. <strong>MC-NNM</strong> fills in the "?" entries by exploiting low-rank structure: the $N \\times T$ outcome matrix is driven by a few latent factors, so its singular values decay quickly. The completed matrix provides counterfactual estimates for every unit at every time.';
+    renderMathIn(narr);
   }
 
   var mcObs = new MutationObserver(function() {
@@ -6695,7 +7285,7 @@ document.addEventListener('keydown', (e) => {
 
     var dpr = window.devicePixelRatio || 1;
     canvas.width = CW * dpr; canvas.height = CH * dpr;
-    canvas.style.width = CW + 'px'; canvas.style.height = CH + 'px';
+    canvas.style.width = '100%'; canvas.style.maxWidth = CW + 'px'; canvas.style.height = 'auto';
     var ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
     ctx.fillStyle = '#12141f'; ctx.fillRect(0, 0, CW, CH);
@@ -6801,6 +7391,7 @@ document.addEventListener('keydown', (e) => {
     } else {
       narr.innerHTML = '<strong style="color:#ef4444;">Regime shift — decreased exogenous noise.</strong> σ²_εX dropped from ' + sigEpsPre.toFixed(1) + ' to ' + sigEpsPost.toFixed(1) + '. The OLS bias <em>increases</em> from ' + olsBiasPre.toFixed(3) + ' to ' + olsBiasPost.toFixed(3) + ' — the confounder $U$ now explains more of $X$\'s variance, amplifying the omitted variable bias. The pre-regime OLS model underestimates this new bias. <strong>The causal model remains correct</strong> because β_X, β_U, and β are structural parameters that don\'t change with noise.';
     }
+    renderMathIn(narr);
   }
 
   slider.addEventListener('input', drawRegime);
@@ -6811,6 +7402,409 @@ document.addEventListener('keydown', (e) => {
   });
   regObs.observe(document.getElementById('panel-l10'), { attributes: true, attributeFilter: ['class'] });
   setTimeout(drawRegime, 200);
+})();
+
+
+// ===================================================================
+// ===== Study-experience layer: boot passes, wayfinding, search, =====
+// ===== self-grading, scroll-reveal, narration flash              =====
+// ===================================================================
+(function() {
+  'use strict';
+
+  const PANELS = Array.from(document.querySelectorAll('.tab-panel'));
+  const tabLabel = id => {
+    const t = document.querySelector('.tab[data-tab="' + id + '"]');
+    return t ? t.textContent.trim() : id;
+  };
+  const slug = s => s.toLowerCase().replace(/\$[^$]*\$/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48);
+
+  // ---- Boot pass 1: wrap concept-card bodies for the grid-rows expand animation ----
+  document.querySelectorAll('.concept-body').forEach(body => {
+    const inner = document.createElement('div');
+    inner.className = 'cb-inner';
+    while (body.firstChild) inner.appendChild(body.firstChild);
+    body.appendChild(inner);
+    body.classList.add('cb-wrapped');
+  });
+
+  // ---- Boot pass 2: keyboard access for concept cards ----
+  document.querySelectorAll('.concept-card').forEach(card => {
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('role', 'button');
+    card.setAttribute('aria-expanded', 'false');
+    card.addEventListener('keydown', e => {
+      if ((e.key === 'Enter' || e.key === ' ') && e.target === card) {
+        e.preventDefault();
+        toggleCard(card);
+      }
+    });
+    new MutationObserver(() =>
+      card.setAttribute('aria-expanded', card.classList.contains('open') ? 'true' : 'false')
+    ).observe(card, { attributes: true, attributeFilter: ['class'] });
+  });
+
+  // ---- Boot pass 3: horizontal-scroll wrappers for wide tables ----
+  document.querySelectorAll('.comparison-table').forEach(table => {
+    if (table.parentElement.classList.contains('table-scroll')) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'table-scroll';
+    table.parentNode.insertBefore(wrap, table);
+    wrap.appendChild(table);
+  });
+
+  // ---- Boot pass 4: section ids + ARIA panel roles ----
+  PANELS.forEach(panel => {
+    panel.setAttribute('role', 'tabpanel');
+    const seen = {};
+    panel.querySelectorAll('.section-title').forEach(h => {
+      if (h.id) return;
+      let id = panel.id.replace('panel-', '') + '--' + (slug(h.textContent) || 'section');
+      if (seen[id] != null) id += '-' + (++seen[id]);
+      else seen[id] = 0;
+      h.id = id;
+    });
+  });
+
+  // ---- Boot pass 5: prev/next lecture footers ----
+  PANELS.forEach(panel => {
+    const id = panel.id.replace('panel-', '');
+    const idx = TAB_IDS.indexOf(id);
+    if (idx === -1) return;
+    const nav = document.createElement('div');
+    nav.className = 'panel-nav';
+    const mk = (targetId, dir) => {
+      const b = document.createElement('button');
+      b.className = dir === 'next' ? 'pn-next' : 'pn-prev';
+      b.innerHTML = '<span class="pn-label">' + (dir === 'next' ? 'Next' : 'Previous') + '</span>' +
+        '<span class="pn-title">' + (dir === 'next' ? '' : '&larr; ') + tabLabel(targetId) + (dir === 'next' ? ' &rarr;' : '') + '</span>';
+      b.addEventListener('click', () => { activateTab(targetId); window.scrollTo({ top: 0 }); });
+      return b;
+    };
+    if (idx > 0) nav.appendChild(mk(TAB_IDS[idx - 1], 'prev'));
+    else { const s = document.createElement('span'); s.className = 'pn-spacer'; nav.appendChild(s); }
+    if (idx < TAB_IDS.length - 1) nav.appendChild(mk(TAB_IDS[idx + 1], 'next'));
+    panel.appendChild(nav);
+  });
+
+  // ---- Narration flash: pulse any .viz-narration when its content changes ----
+  if (MOTION_OK) {
+    document.querySelectorAll('.viz-narration').forEach(el => {
+      let pending = false;
+      new MutationObserver(() => {
+        if (pending) return;
+        pending = true;
+        requestAnimationFrame(() => {
+          pending = false;
+          el.classList.remove('flash');
+          void el.offsetWidth;
+          el.classList.add('flash');
+        });
+      }).observe(el, { childList: true });
+    });
+  }
+
+  // ---- Scroll reveal with stagger ----
+  if (MOTION_OK && 'IntersectionObserver' in window) {
+    document.body.classList.add('reveal-on');
+    const io = new IntersectionObserver(entries => {
+      let i = 0;
+      entries.forEach(en => {
+        if (!en.isIntersecting) return;
+        en.target.style.transitionDelay = Math.min(i++ * 55, 220) + 'ms';
+        en.target.classList.add('is-visible');
+        en.target.addEventListener('transitionend', function clear() {
+          en.target.style.transitionDelay = '';
+          en.target.removeEventListener('transitionend', clear);
+        });
+        io.unobserve(en.target);
+      });
+    }, { threshold: 0.06, rootMargin: '0px 0px 60px 0px' });
+    const REVEAL_SEL = '.card, .concept-card, .quiz-card, .graph-container, .flowchart, .table-scroll';
+    document.querySelectorAll('.content :is(' + REVEAL_SEL + ')').forEach(el => io.observe(el));
+    // On tab switch, reveal the new panel's above-fold items immediately
+    // (the observer alone would lag a frame and flash an empty panel)
+    document.addEventListener('ci:tabshown', () => {
+      const panel = document.querySelector('.tab-panel.active');
+      if (!panel) return;
+      let i = 0;
+      panel.querySelectorAll(REVEAL_SEL).forEach(el => {
+        if (el.classList.contains('is-visible')) return;
+        const r = el.getBoundingClientRect();
+        if (r.top < window.innerHeight + 60) {
+          el.style.transitionDelay = Math.min(i++ * 55, 220) + 'ms';
+          el.classList.add('is-visible');
+          io.unobserve(el);
+        }
+      });
+    });
+  }
+
+  // ---- Floating actions: back-to-top + per-tab table of contents ----
+  const fabStack = document.createElement('div');
+  fabStack.className = 'fab-stack';
+  fabStack.innerHTML =
+    '<button class="fab" id="tocFab" title="On this page" aria-label="Table of contents">&#9776;</button>' +
+    '<button class="fab hidden" id="topFab" title="Back to top" aria-label="Back to top">&uarr;</button>';
+  document.body.appendChild(fabStack);
+  const tocPop = document.createElement('nav');
+  tocPop.className = 'toc-pop';
+  tocPop.setAttribute('aria-label', 'On this page');
+  document.body.appendChild(tocPop);
+
+  const topFab = document.getElementById('topFab');
+  const tocFab = document.getElementById('tocFab');
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      topFab.classList.toggle('hidden', window.scrollY < window.innerHeight * 0.8);
+      ticking = false;
+    });
+  }, { passive: true });
+  topFab.addEventListener('click', () => window.scrollTo({ top: 0, behavior: MOTION_OK ? 'smooth' : 'auto' }));
+
+  let spyIO = null;
+  function buildToc() {
+    const panel = document.querySelector('.tab-panel.active');
+    if (spyIO) { spyIO.disconnect(); spyIO = null; }
+    if (!panel) { tocPop.innerHTML = ''; return; }
+    const heads = Array.from(panel.querySelectorAll('.section-title'));
+    tocPop.innerHTML = '<div class="toc-head">' + tabLabel(panel.id.replace('panel-', '')) + ' — on this page</div>';
+    heads.forEach(h => {
+      const a = document.createElement('a');
+      a.href = '#' + h.id;
+      a.textContent = h.textContent.replace(/\$[^$]*\$/g, '').trim();
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        h.scrollIntoView({ behavior: MOTION_OK ? 'smooth' : 'auto', block: 'start' });
+        tocPop.classList.remove('open');
+      });
+      tocPop.appendChild(a);
+    });
+    if ('IntersectionObserver' in window && heads.length) {
+      spyIO = new IntersectionObserver(entries => {
+        entries.forEach(en => {
+          if (!en.isIntersecting) return;
+          tocPop.querySelectorAll('a').forEach(a => a.classList.toggle('current', a.getAttribute('href') === '#' + en.target.id));
+        });
+      }, { rootMargin: '-60px 0px -75% 0px' });
+      heads.forEach(h => spyIO.observe(h));
+    }
+  }
+  tocFab.addEventListener('click', e => { e.stopPropagation(); tocPop.classList.toggle('open'); });
+  document.addEventListener('click', e => {
+    if (!tocPop.contains(e.target) && e.target !== tocFab) tocPop.classList.remove('open');
+  });
+  document.addEventListener('ci:tabshown', buildToc);
+  buildToc();
+
+  // ---- Search palette (Ctrl/Cmd-K or "/") ----
+  const INDEX = [];
+  PANELS.forEach(panel => {
+    const pid = panel.id.replace('panel-', '');
+    panel.querySelectorAll('.section-title').forEach(h =>
+      INDEX.push({ tab: pid, type: 'section', el: h, label: h.textContent.trim(), body: '' }));
+    panel.querySelectorAll('.concept-card').forEach(c => {
+      const head = c.querySelector('.concept-header');
+      INDEX.push({ tab: pid, type: 'card', el: c, label: head ? head.textContent.trim() : '', body: c.textContent.toLowerCase() });
+    });
+    panel.querySelectorAll('.quiz-card').forEach(q => {
+      const head = q.querySelector('.question');
+      INDEX.push({ tab: pid, type: 'quiz', el: q, label: head ? head.textContent.trim().slice(0, 90) : '', body: q.textContent.toLowerCase() });
+    });
+  });
+  INDEX.forEach(it => { it.labelLC = it.label.toLowerCase(); });
+
+  const overlay = document.createElement('div');
+  overlay.className = 'palette-overlay';
+  overlay.innerHTML =
+    '<div class="palette" role="dialog" aria-label="Search">' +
+    '<input type="text" placeholder="Search concepts, sections, practice questions&hellip;" aria-label="Search query">' +
+    '<div class="palette-results"></div>' +
+    '<div class="palette-hints"><span><kbd>&uarr;</kbd><kbd>&darr;</kbd> navigate</span><span><kbd>&crarr;</kbd> jump</span><span><kbd>esc</kbd> close</span><span><kbd>&larr;</kbd><kbd>&rarr;</kbd> switch lecture (when closed)</span></div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  const palInput = overlay.querySelector('input');
+  const palResults = overlay.querySelector('.palette-results');
+  let palSel = 0, palHits = [];
+
+  function openPalette() {
+    overlay.classList.add('open');
+    palInput.value = '';
+    renderPalette('');
+    palInput.focus();
+  }
+  function closePalette() { overlay.classList.remove('open'); }
+
+  function renderPalette(q) {
+    q = q.trim().toLowerCase();
+    const tokens = q.split(/\s+/).filter(Boolean);
+    palHits = !tokens.length ? [] : INDEX
+      .map(it => {
+        const inLabel = tokens.every(t => it.labelLC.includes(t));
+        const inBody = tokens.every(t => it.labelLC.includes(t) || it.body.includes(t));
+        return { it, score: inLabel ? 2 : inBody ? 1 : 0 };
+      })
+      .filter(h => h.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 12)
+      .map(h => h.it);
+    palSel = 0;
+    if (!q) {
+      palResults.innerHTML = '<div class="p-empty">Type to search all 15 tabs &mdash; concept cards, sections, and practice questions.</div>';
+      return;
+    }
+    if (!palHits.length) {
+      palResults.innerHTML = '<div class="p-empty">No matches.</div>';
+      return;
+    }
+    palResults.innerHTML = '';
+    palHits.forEach((it, i) => {
+      const row = document.createElement('div');
+      row.className = 'p-row' + (i === palSel ? ' sel' : '');
+      row.innerHTML = '<span class="p-chip"></span><span class="p-label"></span>';
+      row.querySelector('.p-chip').textContent = tabLabel(it.tab);
+      row.querySelector('.p-label').textContent = (it.type === 'quiz' ? 'Q: ' : '') + it.label.replace(/\$[^$]*\$/g, '').trim();
+      row.addEventListener('click', () => goTo(it));
+      row.addEventListener('mousemove', () => { palSel = i; paintSel(); });
+      palResults.appendChild(row);
+    });
+  }
+  function paintSel() {
+    palResults.querySelectorAll('.p-row').forEach((r, i) => r.classList.toggle('sel', i === palSel));
+    const cur = palResults.querySelector('.p-row.sel');
+    if (cur) cur.scrollIntoView({ block: 'nearest' });
+  }
+  function goTo(it) {
+    closePalette();
+    activateTab(it.tab, { noScroll: true });
+    if (it.type === 'card' && !it.el.classList.contains('open')) it.el.classList.add('open');
+    requestAnimationFrame(() => {
+      it.el.scrollIntoView({ behavior: MOTION_OK ? 'smooth' : 'auto', block: 'center' });
+      it.el.classList.remove('flash-target');
+      void it.el.offsetWidth;
+      it.el.classList.add('flash-target');
+    });
+  }
+
+  palInput.addEventListener('input', () => renderPalette(palInput.value));
+  palInput.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); palSel = Math.min(palSel + 1, palHits.length - 1); paintSel(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); palSel = Math.max(palSel - 1, 0); paintSel(); }
+    else if (e.key === 'Enter' && palHits[palSel]) goTo(palHits[palSel]);
+    else if (e.key === 'Escape') closePalette();
+  });
+  overlay.addEventListener('click', e => { if (e.target === overlay) closePalette(); });
+  document.addEventListener('keydown', e => {
+    if ((e.key === 'k' || e.key === 'K') && (e.ctrlKey || e.metaKey)) { e.preventDefault(); openPalette(); return; }
+    if (e.key === '/' && !overlay.classList.contains('open') &&
+        !e.target.matches('input, textarea, select') && !e.target.isContentEditable) {
+      e.preventDefault();
+      openPalette();
+    }
+  });
+
+  // ---- Self-grading for practice/drill quiz cards ----
+  let grades = {};
+  try { grades = JSON.parse(localStorage.getItem('ci.quiz') || '{}'); } catch (e) {}
+  const saveGrades = () => { try { localStorage.setItem('ci.quiz', JSON.stringify(grades)); } catch (e) {} };
+
+  const QUIZ = [];
+  PANELS.forEach(panel => {
+    const pid = panel.id.replace('panel-', '');
+    panel.querySelectorAll('.quiz-card').forEach((card, i) => {
+      const head = card.querySelector('.question');
+      const qid = pid + ':q' + i + ':' + slug(head ? head.textContent : '').slice(0, 24);
+      QUIZ.push({ qid, card, panel: pid });
+      card.dataset.qid = qid;
+      if (grades[qid]) card.classList.add(grades[qid] === 'right' ? 'graded-right' : 'graded-wrong');
+    });
+  });
+
+  function setGrade(card, g) {
+    const qid = card.dataset.qid;
+    if (grades[qid] === g) { delete grades[qid]; card.classList.remove('graded-right', 'graded-wrong'); }
+    else {
+      grades[qid] = g;
+      card.classList.toggle('graded-right', g === 'right');
+      card.classList.toggle('graded-wrong', g === 'wrong');
+    }
+    saveGrades();
+    const bar = card.querySelector('.grade-bar');
+    if (bar) {
+      bar.querySelector('[data-g="right"]').classList.toggle('on', grades[qid] === 'right');
+      bar.querySelector('[data-g="wrong"]').classList.toggle('on', grades[qid] === 'wrong');
+    }
+    updateScoreboards();
+  }
+
+  function injectGradeBar(answer) {
+    const card = answer.closest('.quiz-card');
+    if (!card || card.querySelector('.grade-bar')) return;
+    const bar = document.createElement('div');
+    bar.className = 'grade-bar';
+    bar.innerHTML = '<button data-g="right">&#10003; Got it</button><button data-g="wrong">&#10007; Missed it</button>';
+    const qid = card.dataset.qid;
+    bar.querySelector('[data-g="right"]').classList.toggle('on', grades[qid] === 'right');
+    bar.querySelector('[data-g="wrong"]').classList.toggle('on', grades[qid] === 'wrong');
+    bar.querySelectorAll('button').forEach(b =>
+      b.addEventListener('click', e => { e.stopPropagation(); setGrade(card, b.dataset.g); }));
+    answer.appendChild(bar);
+  }
+
+  const baseToggleAnswer = window.toggleAnswer;
+  window.toggleAnswer = function(btn) {
+    baseToggleAnswer(btn);
+    const answer = btn.nextElementSibling;
+    if (answer && answer.classList.contains('show')) injectGradeBar(answer);
+  };
+
+  const boards = {};
+  PANELS.forEach(panel => {
+    const pid = panel.id.replace('panel-', '');
+    const cards = QUIZ.filter(q => q.panel === pid);
+    if (cards.length < 3) return;
+    const board = document.createElement('div');
+    board.className = 'scoreboard';
+    board.innerHTML = '<span class="sb-text"></span>' +
+      '<button class="sb-missed">Show missed only</button>' +
+      '<button class="sb-reset">Reset grades</button>';
+    board.querySelector('.sb-missed').addEventListener('click', () => {
+      panel.classList.toggle('filter-missed');
+      board.querySelector('.sb-missed').classList.toggle('on', panel.classList.contains('filter-missed'));
+      board.querySelector('.sb-missed').textContent =
+        panel.classList.contains('filter-missed') ? 'Show all' : 'Show missed only';
+    });
+    board.querySelector('.sb-reset').addEventListener('click', () => {
+      cards.forEach(q => {
+        delete grades[q.qid];
+        q.card.classList.remove('graded-right', 'graded-wrong');
+        const bar = q.card.querySelector('.grade-bar');
+        if (bar) bar.querySelectorAll('button').forEach(b => b.classList.remove('on'));
+      });
+      saveGrades();
+      updateScoreboards();
+    });
+    const firstSection = panel.querySelector('.section-title');
+    if (firstSection) firstSection.insertAdjacentElement('afterend', board);
+    else panel.prepend(board);
+    boards[pid] = { board, cards };
+  });
+
+  function updateScoreboards() {
+    Object.keys(boards).forEach(pid => {
+      const { board, cards } = boards[pid];
+      const right = cards.filter(q => grades[q.qid] === 'right').length;
+      const wrong = cards.filter(q => grades[q.qid] === 'wrong').length;
+      board.querySelector('.sb-text').innerHTML =
+        '<strong>' + (right + wrong) + '/' + cards.length + '</strong> graded &middot; ' +
+        '<strong style="color:var(--success)">' + right + '</strong> correct &middot; ' +
+        '<strong style="color:var(--danger)">' + wrong + '</strong> missed';
+    });
+  }
+  updateScoreboards();
 })();
 
 </script>
